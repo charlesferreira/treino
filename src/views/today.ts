@@ -1,0 +1,382 @@
+import { DAY_KEYS, DAY_NAMES, exerciseName, exerciseNotes, program } from '../program'
+import { formatDayMonth, todayKey, weekdayOf } from '../dates'
+import { addSet, getDayLog, loadLogs, removeSet, setCardio, setNote, setTemplate } from '../storage'
+import { computeProgression, type ProgressionState, type Session } from '../progression'
+import type { CardioDay, DayKey, GymDay, GymItem, SetEntry } from '../types'
+import { button, el, fmtRest, fmtWeight, holdButton, overlay } from '../ui'
+import { startRest } from '../timer'
+import { unlockAudio } from '../audio'
+import { keepAwake } from '../wakelock'
+
+interface Draft {
+  w: number
+  r: number
+  rir?: number
+}
+
+// Estado efêmero da tela (não persiste): valores dos steppers e cards abertos à força.
+const drafts = new Map<string, Draft>()
+const expandOverride = new Map<string, boolean>()
+const notesOpen = new Set<string>()
+let cardioEditing = false
+
+function fmtSets(sets: SetEntry[]): string {
+  return sets.map((s) => `${fmtWeight(s.w)}kg×${s.r}`).join(', ')
+}
+
+function getDraft(ex: string, item: GymItem, todaySets: SetEntry[], last?: Session): Draft {
+  const existing = drafts.get(ex)
+  if (existing) return existing
+  const next = todaySets.length
+  const draft: Draft = {
+    w: todaySets.at(-1)?.w ?? last?.sets[next]?.w ?? last?.sets[0]?.w ?? 0,
+    r: last?.sets[next]?.r ?? last?.sets.at(-1)?.r ?? item.reps[0],
+  }
+  drafts.set(ex, draft)
+  return draft
+}
+
+function numberInput(value: number, decimals: boolean, onChange: (v: number) => void): HTMLInputElement {
+  const input = el('input', 'num') as HTMLInputElement
+  input.type = 'number'
+  input.inputMode = decimals ? 'decimal' : 'numeric'
+  if (decimals) input.step = '0.5'
+  input.min = '0'
+  input.value = fmtWeight(value).replace(',', '.')
+  input.addEventListener('change', () => {
+    const v = parseFloat(input.value.replace(',', '.'))
+    if (!Number.isNaN(v) && v >= 0) onChange(v)
+    else input.value = String(value)
+  })
+  return input
+}
+
+function progressionBanner(item: GymItem, prog: ProgressionState): HTMLElement[] {
+  const out: HTMLElement[] = []
+  if (prog.kind === 'primeira-vez') {
+    out.push(
+      el('div', 'banner banner-first',
+        `Primeira vez — anote as cargas. Alvo: ${item.sets} × ${item.reps[0]}–${item.reps[1]}.`),
+    )
+    return out
+  }
+  out.push(
+    el('div', 'last-session', [
+      el('span', 'last-date', `Última · ${formatDayMonth(prog.last.date)}`),
+      el('span', 'last-sets', ` · ${fmtSets(prog.last.sets)}`),
+    ]),
+  )
+  if (prog.kind === 'subir-carga') {
+    out.push(el('div', 'banner banner-up',
+      `🔼 Suba a carga (menor incremento) e volte para ${item.reps[0]} reps.`))
+  } else {
+    out.push(el('div', 'banner banner-meta',
+      `Meta: repetir as cargas e somar reps até ${item.sets}×${item.reps[1]}.`))
+  }
+  if (prog.plateau) {
+    out.push(el('div', 'banner banner-warn',
+      '3 sessões sem progresso — cheque sono e proteína; se ok, troque a variação ou tire 10% e resuba.'))
+  }
+  return out
+}
+
+function gymCard(
+  date: string,
+  template: DayKey,
+  item: GymItem,
+  rerender: () => void,
+): HTMLElement {
+  const ex = item.exercise
+  const logs = loadLogs()
+  const todaySets = logs[date]?.sets[ex] ?? []
+  const done = todaySets.length >= item.sets
+  const prog = computeProgression(ex, item, logs, date)
+  const last = prog.kind === 'primeira-vez' ? undefined : prog.last
+  const collapsed = done && expandOverride.get(ex) !== true
+
+  const card = el('section', `card${done ? ' card-done' : ''}`)
+
+  const scheme = `${item.sets} × ${item.reps[0]}–${item.reps[1]} · RIR ${item.rir} · ${fmtRest(item.rest)}`
+  const status = done ? '✓' : `${todaySets.length}/${item.sets}`
+  const header = el('header', 'card-header', [
+    el('div', 'card-titles', [
+      el('h2', 'card-name', exerciseName(ex)),
+      el('div', 'card-scheme', scheme),
+    ]),
+    el('div', `card-status${done ? ' ok' : ''}`, status),
+  ])
+  header.addEventListener('click', () => {
+    if (!done) return
+    expandOverride.set(ex, collapsed)
+    rerender()
+  })
+  card.append(header)
+
+  if (collapsed) {
+    card.append(el('div', 'card-collapsed', fmtSets(todaySets)))
+    return card
+  }
+
+  card.append(...progressionBanner(item, prog))
+
+  const notes = exerciseNotes(ex)
+  if (notes) {
+    const toggle = button('notes-toggle', `ℹ️ Observações`, () => {
+      if (notesOpen.has(ex)) notesOpen.delete(ex)
+      else notesOpen.add(ex)
+      rerender()
+    })
+    card.append(toggle)
+    if (notesOpen.has(ex)) card.append(el('div', 'notes-body', notes))
+  }
+
+  if (todaySets.length > 0) {
+    const list = el('div', 'done-sets')
+    todaySets.forEach((s, i) => {
+      const line = el('div', 'done-set', [
+        el('span', '', `✓ ${i + 1}ª · ${fmtWeight(s.w)} kg × ${s.r}${s.rir !== undefined ? ` · RIR ${s.rir}` : ''}`),
+        button('del-set', '×', () => {
+          if (confirm(`Apagar a ${i + 1}ª série de ${exerciseName(ex)}?`)) {
+            removeSet(date, ex, i)
+            rerender()
+          }
+        }),
+      ])
+      list.append(line)
+    })
+    card.append(list)
+  }
+
+  // Linha de registro da próxima série
+  const draft = getDraft(ex, item, todaySets, last)
+
+  const wInput = numberInput(draft.w, true, (v) => (draft.w = v))
+  const rInput = numberInput(draft.r, false, (v) => (draft.r = v))
+
+  const wGroup = el('div', 'stepper', [
+    holdButton('step-btn', '−', () => {
+      draft.w = Math.max(0, Math.round((draft.w - 1) * 2) / 2)
+      wInput.value = String(draft.w)
+    }),
+    el('div', 'step-value', [wInput, el('span', 'unit', 'kg')]),
+    holdButton('step-btn', '+', () => {
+      draft.w = Math.round((draft.w + 1) * 2) / 2
+      wInput.value = String(draft.w)
+    }),
+  ])
+
+  const rGroup = el('div', 'stepper', [
+    holdButton('step-btn', '−', () => {
+      draft.r = Math.max(1, draft.r - 1)
+      rInput.value = String(draft.r)
+    }),
+    el('div', 'step-value', [rInput, el('span', 'unit', 'reps')]),
+    holdButton('step-btn', '+', () => {
+      draft.r = draft.r + 1
+      rInput.value = String(draft.r)
+    }),
+  ])
+
+  const chips = el('div', 'rir-chips', [el('span', 'rir-label', 'RIR')])
+  for (let v = 0; v <= 4; v++) {
+    const chip = button(`chip${draft.rir === v ? ' on' : ''}`, String(v), () => {
+      draft.rir = draft.rir === v ? undefined : v
+      chips.querySelectorAll('.chip').forEach((c, i) => c.classList.toggle('on', draft.rir === i))
+    })
+    chips.append(chip)
+  }
+
+  const confirmBtn = button('log-btn', '✓', () => {
+    unlockAudio()
+    keepAwake()
+    const entry: SetEntry = { w: draft.w, r: draft.r }
+    if (draft.rir !== undefined) entry.rir = draft.rir
+    addSet(date, template, ex, entry)
+    startRest(item.rest, exerciseName(ex))
+    rerender()
+  })
+
+  card.append(el('div', 'entry-row', [wGroup, rGroup, confirmBtn]), chips)
+  return card
+}
+
+function renderGym(
+  root: HTMLElement,
+  date: string,
+  template: DayKey,
+  day: GymDay,
+  rerender: () => void,
+): void {
+  const logs = loadLogs()
+  const daySets = logs[date]?.sets ?? {}
+  const totalPlanned = day.items.reduce((a, i) => a + i.sets, 0)
+  const totalDone = day.items.reduce(
+    (a, i) => a + Math.min(daySets[i.exercise]?.length ?? 0, i.sets),
+    0,
+  )
+
+  const bar = el('div', 'progress', [el('div', 'progress-fill')])
+  ;(bar.firstElementChild as HTMLElement).style.width =
+    `${totalPlanned ? Math.round((totalDone / totalPlanned) * 100) : 0}%`
+  root.append(el('div', 'progress-wrap', [bar, el('div', 'progress-text', `${totalDone}/${totalPlanned} séries`)]))
+
+  for (const item of day.items) {
+    root.append(gymCard(date, template, item, rerender))
+  }
+}
+
+function renderCardio(
+  root: HTMLElement,
+  date: string,
+  template: DayKey,
+  day: CardioDay,
+  rerender: () => void,
+): void {
+  const log = getDayLog(date)
+  const [minLo, minHi] = day.cardio.minutes
+
+  root.append(
+    el('section', 'card', [
+      el('h2', 'card-name', `Meta: ${minLo}–${minHi} min`),
+      el('p', 'guidance', day.cardio.guidance),
+    ]),
+  )
+
+  if (log?.cardio && !cardioEditing) {
+    const c = log.cardio
+    const parts = [`${c.minutes} min`]
+    if (c.km) parts.push(`${fmtWeight(c.km)} km`)
+    if (c.local) parts.push(c.local)
+    root.append(
+      el('section', 'card card-done', [
+        el('div', 'cardio-done', `✓ Corrida registrada — ${parts.join(' · ')}`),
+        button('ghost-btn', 'Editar', () => {
+          cardioEditing = true
+          rerender()
+        }),
+      ]),
+    )
+    return
+  }
+
+  const draft = {
+    minutes: log?.cardio?.minutes ?? 35,
+    km: log?.cardio?.km !== undefined ? String(log.cardio.km) : '',
+    local: log?.cardio?.local ?? 'esteira',
+  }
+
+  const minInput = numberInput(draft.minutes, false, (v) => (draft.minutes = v))
+  const minGroup = el('div', 'stepper', [
+    holdButton('step-btn', '−', () => {
+      draft.minutes = Math.max(0, draft.minutes - 1)
+      minInput.value = String(draft.minutes)
+    }),
+    el('div', 'step-value', [minInput, el('span', 'unit', 'min')]),
+    holdButton('step-btn', '+', () => {
+      draft.minutes += 1
+      minInput.value = String(draft.minutes)
+    }),
+  ])
+
+  const kmInput = el('input', 'text-input') as HTMLInputElement
+  kmInput.type = 'text'
+  kmInput.inputMode = 'decimal'
+  kmInput.placeholder = 'km (opcional)'
+  kmInput.value = draft.km
+  kmInput.addEventListener('input', () => (draft.km = kmInput.value))
+
+  const localChips = el('div', 'rir-chips')
+  for (const loc of ['esteira', 'rua']) {
+    const chip = button(`chip chip-wide${draft.local === loc ? ' on' : ''}`, loc, () => {
+      draft.local = loc
+      localChips.querySelectorAll('.chip').forEach((c) =>
+        c.classList.toggle('on', c.textContent === draft.local),
+      )
+    })
+    localChips.append(chip)
+  }
+
+  const save = button('primary-btn', 'Registrar corrida', () => {
+    const km = parseFloat(draft.km.replace(',', '.'))
+    setCardio(date, template, {
+      minutes: draft.minutes,
+      ...(Number.isNaN(km) || draft.km.trim() === '' ? {} : { km }),
+      local: draft.local,
+    })
+    cardioEditing = false
+    rerender()
+  })
+
+  root.append(el('section', 'card', [
+    el('div', 'field-label', 'Minutos'),
+    minGroup,
+    kmInput,
+    localChips,
+    save,
+  ]))
+}
+
+function openTemplateSheet(date: string, current: DayKey, rerender: () => void): void {
+  const list = el('div', 'sheet-list', el('h2', 'sheet-title', 'Fazer outro treino'))
+  let close: () => void
+  for (const key of DAY_KEYS) {
+    const day = program.week[key]
+    const b = button(`sheet-item${key === current ? ' current' : ''}`,
+      `${DAY_NAMES[key]} — ${day.title}`, () => {
+        setTemplate(date, key)
+        close()
+        rerender()
+      })
+    list.append(b)
+  }
+  close = overlay(list)
+}
+
+function openNoteSheet(date: string, template: DayKey, rerender: () => void): void {
+  const existing = getDayLog(date)?.note ?? ''
+  const ta = el('textarea', 'note-input') as HTMLTextAreaElement
+  ta.value = existing
+  ta.placeholder = 'Como foi o treino? Dores, ajustes, observações…'
+  ta.rows = 4
+  let close: () => void
+  const save = button('primary-btn', 'Salvar nota', () => {
+    setNote(date, template, ta.value)
+    close()
+    rerender()
+  })
+  close = overlay(el('div', 'sheet-list', [el('h2', 'sheet-title', 'Nota do dia'), ta, save]))
+}
+
+export function renderToday(root: HTMLElement): void {
+  const rerender = () => renderToday(root)
+  const date = todayKey()
+  const realDay = weekdayOf(date)
+  const log = getDayLog(date)
+  const template = log?.template ?? realDay
+  const day = program.week[template]
+
+  root.innerHTML = ''
+
+  const switched = template !== realDay
+  const header = el('header', 'app-header', [
+    el('div', 'header-titles', [
+      el('h1', '', `${DAY_NAMES[realDay]} — ${day.title}`),
+      switched ? el('div', 'header-badge', `treino de ${DAY_NAMES[template].toLowerCase()}`) : null,
+    ]),
+    button('icon-btn', '⇄', () => openTemplateSheet(date, template, rerender)),
+  ])
+  root.append(header)
+
+  if (day.type === 'cardio') renderCardio(root, date, template, day, rerender)
+  else renderGym(root, date, template, day, rerender)
+
+  const note = getDayLog(date)?.note
+  root.append(
+    el('div', 'day-note-wrap', [
+      note ? el('div', 'day-note', `📝 ${note}`) : null,
+      button('ghost-btn', note ? 'Editar nota do dia' : 'Nota do dia', () =>
+        openNoteSheet(date, template, rerender),
+      ),
+    ]),
+  )
+}
