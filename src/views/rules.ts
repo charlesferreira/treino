@@ -27,7 +27,7 @@ export function renderRules(root: HTMLElement): void {
   root.innerHTML = ''
   root.append(el('header', 'app-header', el('div', 'header-row', el('h1', '', 'Regras'))))
 
-  const list = el('section', 'card')
+  const list = el('section', 'block')
   for (const [term, text] of RULES) {
     list.append(el('div', 'rule', [el('strong', 'rule-term', term), el('span', '', text)]))
   }
@@ -64,7 +64,7 @@ export function renderRules(root: HTMLElement): void {
 
   root.append(
     el('div', 'section-title', 'Backup'),
-    el('section', 'card', [
+    el('section', 'block', [
       el('div', 'backup-warn', [
         icon('alert', 16),
         el('span', '', 'Seus dados vivem só neste aparelho. Exporte de vez em quando.'),

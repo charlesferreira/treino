@@ -116,23 +116,20 @@ function gymCard(
   const last = prog.kind === 'primeira-vez' ? undefined : prog.last
   const collapsed = done && expandOverride.get(ex) !== true
 
-  const card = el('section', `card${done ? ' card-done' : ''}`)
+  const card = el('section', `block${done ? ' block-done' : ''}`)
 
   const pips = el('div', 'pips')
   for (let i = 0; i < item.sets; i++) {
     pips.append(el('div', `pip${i < todaySets.length ? ' on' : ''}`))
   }
 
-  const header = el('header', 'card-head', [
-    el('div', 'card-head-main', [
-      el('h2', 'card-name', exerciseName(ex)),
-      el('div', 'meta-row', [
-        el('span', 'meta', `${item.sets} × ${item.reps[0]}–${item.reps[1]}`),
-        el('span', 'meta', `RIR ${item.rir}`),
-        el('span', 'meta', [icon('clock', 13), el('span', '', fmtRest(item.rest))]),
-      ]),
+  const scheme = `${item.sets} × ${item.reps[0]}–${item.reps[1]} · RIR ${item.rir} · ${fmtRest(item.rest)}`
+  const header = el('header', 'item-head', [
+    el('div', 'item-main', [
+      el('h2', 'item-name', exerciseName(ex)),
+      el('div', 'meta-line', scheme),
     ]),
-    done ? el('div', 'done-badge', icon('check', 17)) : pips,
+    done ? el('div', 'done-check', icon('check', 22)) : pips,
   ])
   header.addEventListener('click', () => {
     if (!done) return
@@ -142,7 +139,7 @@ function gymCard(
   card.append(header)
 
   if (collapsed) {
-    card.append(el('div', 'card-collapsed', fmtSets(todaySets)))
+    card.append(el('div', 'item-summary', fmtSets(todaySets)))
     return card
   }
 
@@ -275,7 +272,7 @@ function renderCardio(
   const [minLo, minHi] = day.cardio.minutes
 
   root.append(
-    el('section', 'card', [
+    el('section', 'block', [
       el('span', 'eyebrow', 'Meta do dia'),
       el('div', 'hero-goal', [
         el('span', 'big', `${minLo}–${minHi}`),
@@ -291,7 +288,7 @@ function renderCardio(
     if (c.km) parts.push(`${fmtWeight(c.km)} km`)
     if (c.local) parts.push(c.local)
     root.append(
-      el('section', 'card card-done', [
+      el('section', 'block block-done', [
         el('div', 'cardio-done', [icon('check', 19), el('span', '', parts.join(' · '))]),
         button('ghost-btn', 'Editar', () => {
           cardioEditing = true
@@ -349,7 +346,7 @@ function renderCardio(
     rerender()
   })
 
-  root.append(el('section', 'card', [
+  root.append(el('section', 'block', [
     el('div', 'entry', [minGroup]),
     kmInput,
     el('div', 'segmented-row', [localSeg]),

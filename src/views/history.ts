@@ -88,9 +88,9 @@ export function renderHistory(root: HTMLElement): void {
     if (log.cardio) summary.append(el('span', '', [el('b', '', `${log.cardio.minutes}`), ' min de corrida']))
     if (n === 0 && !log.cardio) summary.append(el('span', '', 'sem registros'))
 
-    const card = el('section', 'card history-card', [
+    const card = el('section', 'history-row', [
       el('div', 'history-line', [
-        el('div', 'date-chip', [
+        el('div', 'date-col', [
           el('span', 'd', dayNumber(date)),
           el('span', 'w', weekdayShort(date)),
         ]),
