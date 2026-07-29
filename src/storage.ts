@@ -1,11 +1,11 @@
-import type { CardioEntry, DayKey, DayLog, Logs, SetEntry } from './types'
-import { program } from './program'
+import type { DayLog, Logs, SetEntry, TimeEntry } from './types'
 
 const LOGS_KEY = 'treino.logs'
 const SETTINGS_KEY = 'treino.settings'
 
 export interface Settings {
   sound?: boolean
+  lastExport?: string
 }
 
 export function loadLogs(): Logs {
@@ -19,7 +19,7 @@ export function loadLogs(): Logs {
   }
 }
 
-function saveLogs(logs: Logs): void {
+export function saveLogs(logs: Logs): void {
   localStorage.setItem(LOGS_KEY, JSON.stringify(logs))
 }
 
@@ -39,30 +39,23 @@ export function getDayLog(date: string): DayLog | undefined {
   return loadLogs()[date]
 }
 
-export function ensureDayLog(date: string, template: DayKey): DayLog {
-  const logs = loadLogs()
-  let log = logs[date]
-  if (!log) {
-    log = { template, sets: {} }
-    logs[date] = log
-    saveLogs(logs)
-  }
+function withLog(logs: Logs, date: string, workout: string): DayLog {
+  const log = logs[date] ?? { template: workout, sets: {} }
+  logs[date] = log
   return log
 }
 
-export function setTemplate(date: string, template: DayKey): void {
+/** Fixa qual treino é o de hoje (troca manual). Vira a âncora da rotação. */
+export function setTemplate(date: string, workout: string): void {
   const logs = loadLogs()
-  const log = logs[date] ?? { template, sets: {} }
-  log.template = template
-  logs[date] = log
+  withLog(logs, date, workout).template = workout
   saveLogs(logs)
 }
 
-export function addSet(date: string, template: DayKey, exercise: string, entry: SetEntry): void {
+export function addSet(date: string, workout: string, exercise: string, entry: SetEntry): void {
   const logs = loadLogs()
-  const log = logs[date] ?? { template, sets: {} }
+  const log = withLog(logs, date, workout)
   ;(log.sets[exercise] ??= []).push(entry)
-  logs[date] = log
   saveLogs(logs)
 }
 
@@ -75,54 +68,94 @@ export function removeSet(date: string, exercise: string, index: number): void {
   saveLogs(logs)
 }
 
-export function setCardio(date: string, template: DayKey, cardio: CardioEntry): void {
+export function addTime(date: string, workout: string, exercise: string, entry: TimeEntry): void {
   const logs = loadLogs()
-  const log = logs[date] ?? { template, sets: {} }
-  log.cardio = cardio
-  logs[date] = log
+  const log = withLog(logs, date, workout)
+  log.times ??= {}
+  ;(log.times[exercise] ??= []).push(entry)
   saveLogs(logs)
 }
 
-export function setNote(date: string, template: DayKey, note: string): void {
+export function removeTime(date: string, exercise: string, index: number): void {
   const logs = loadLogs()
-  const log = logs[date] ?? { template, sets: {} }
-  if (note.trim()) log.note = note.trim()
-  else delete log.note
-  logs[date] = log
+  const times = logs[date]?.times?.[exercise]
+  if (!times) return
+  times.splice(index, 1)
+  if (times.length === 0) delete logs[date].times![exercise]
   saveLogs(logs)
 }
+
+export function setNote(date: string, workout: string, note: string): void {
+  const logs = loadLogs()
+  const log = withLog(logs, date, workout)
+  if (note.trim()) log.note = note.trim()
+  else delete log.note
+  saveLogs(logs)
+}
+
+/* ----------------------------------- Backup ----------------------------------- */
 
 export interface Backup {
   app: 'treino'
+  format: number
   exportedAt: string
-  programVersion: number
   logs: Logs
   settings: Settings
+  /** Formato 2: o programa e os exercícios do aparelho vão junto. */
+  plan?: unknown
+  exercises?: unknown
+  profile?: unknown
 }
 
 export function exportBackup(todayDate: string): string {
   const backup: Backup = {
     app: 'treino',
+    format: 2,
     exportedAt: todayDate,
-    programVersion: program.version,
     logs: loadLogs(),
     settings: loadSettings(),
+    plan: JSON.parse(localStorage.getItem('treino.plan') ?? 'null'),
+    exercises: JSON.parse(localStorage.getItem('treino.exercises') ?? 'null'),
+    profile: JSON.parse(localStorage.getItem('treino.profile') ?? 'null'),
   }
+  const s = loadSettings()
+  s.lastExport = todayDate
+  saveSettings(s)
   return JSON.stringify(backup, null, 2)
 }
 
-/** Aceita o formato de backup ou um objeto de logs cru. Retorna o nº de dias importados. */
-export function importBackup(json: string): number {
+export interface ImportResult {
+  days: number
+  hasPlan: boolean
+}
+
+/**
+ * Aceita backup v2 (com programa), v1 (só logs e settings) ou um objeto de logs cru.
+ * Quem chama decide o que fazer quando o backup não traz programa.
+ */
+export function importBackup(json: string): ImportResult {
   const parsed = JSON.parse(json)
   let logs: Logs
+  let hasPlan = false
+
   if (parsed && typeof parsed === 'object' && 'logs' in parsed) {
-    logs = (parsed as Backup).logs
-    if (parsed.settings && typeof parsed.settings === 'object') {
-      saveSettings(parsed.settings as Settings)
+    const backup = parsed as Backup
+    logs = backup.logs
+    if (backup.settings && typeof backup.settings === 'object') saveSettings(backup.settings)
+    if (backup.plan && typeof backup.plan === 'object') {
+      localStorage.setItem('treino.plan', JSON.stringify(backup.plan))
+      hasPlan = true
+    }
+    if (backup.exercises && typeof backup.exercises === 'object') {
+      localStorage.setItem('treino.exercises', JSON.stringify(backup.exercises))
+    }
+    if (backup.profile && typeof backup.profile === 'object') {
+      localStorage.setItem('treino.profile', JSON.stringify(backup.profile))
     }
   } else {
     logs = parsed as Logs
   }
+
   if (!logs || typeof logs !== 'object' || Array.isArray(logs)) {
     throw new Error('Formato inválido')
   }
@@ -132,5 +165,5 @@ export function importBackup(json: string): number {
     }
   }
   saveLogs(logs)
-  return Object.keys(logs).length
+  return { days: Object.keys(logs).length, hasPlan }
 }
