@@ -1,6 +1,6 @@
 import { todayKey } from '../dates'
 import { exportBackup, importBackup } from '../storage'
-import { button, el } from '../ui'
+import { button, el, icon } from '../ui'
 
 const RULES: [string, string][] = [
   ['RIR', 'Repetições na reserva. RIR 2 = você pararia faltando 2 reps até a falha.'],
@@ -25,11 +25,11 @@ function download(filename: string, content: string): void {
 
 export function renderRules(root: HTMLElement): void {
   root.innerHTML = ''
-  root.append(el('header', 'app-header', el('h1', '', 'Regras')))
+  root.append(el('header', 'app-header', el('div', 'header-row', el('h1', '', 'Regras'))))
 
-  const list = el('section', 'card')
+  const list = el('section', 'block')
   for (const [term, text] of RULES) {
-    list.append(el('div', 'rule', [el('strong', 'rule-term', term), el('span', '', ` — ${text}`)]))
+    list.append(el('div', 'rule', [el('strong', 'rule-term', term), el('span', '', text)]))
   }
   root.append(list)
 
@@ -63,13 +63,16 @@ export function renderRules(root: HTMLElement): void {
   })
 
   root.append(
-    el('section', 'card', [
-      el('h2', 'card-name', 'Backup'),
-      el('p', 'backup-warn', 'Seus dados vivem só neste aparelho. Exporte de vez em quando.'),
-      button('primary-btn', 'Exportar dados', () => {
+    el('div', 'section-title', 'Backup'),
+    el('section', 'block', [
+      el('div', 'backup-warn', [
+        icon('alert', 16),
+        el('span', '', 'Seus dados vivem só neste aparelho. Exporte de vez em quando.'),
+      ]),
+      button('primary-btn', [icon('download', 19), el('span', '', 'Exportar dados')], () => {
         download(`treino-backup-${todayKey()}.json`, exportBackup(todayKey()))
       }),
-      button('ghost-btn', 'Importar dados', () => fileInput.click()),
+      button('ghost-btn', [icon('upload', 18), el('span', '', 'Importar dados')], () => fileInput.click()),
       fileInput,
     ]),
   )

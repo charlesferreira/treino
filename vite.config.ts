@@ -18,8 +18,8 @@ export default defineConfig({
         lang: 'pt-BR',
         display: 'standalone',
         orientation: 'portrait',
-        background_color: '#0e1013',
-        theme_color: '#0e1013',
+        background_color: '#0a0b0e',
+        theme_color: '#0a0b0e',
         start_url: '/treino/',
         scope: '/treino/',
         icons: [
