@@ -1,8 +1,10 @@
 import { dayNumber, monthLabel, weekdayShort } from '../dates'
-import { exerciseName, program } from '../program'
+import { exerciseName } from '../exercises'
+import { findWorkout } from '../plan'
 import { loadLogs } from '../storage'
-import type { DayLog, SetEntry } from '../types'
+import type { DayLog, SetEntry, TimeEntry } from '../types'
 import { el, fmtWeight, icon } from '../ui'
+import { appHeader, avatarButton } from './chrome'
 
 const openDays = new Set<string>()
 
@@ -18,32 +20,40 @@ function setCount(log: DayLog): number {
   return Object.values(log.sets).reduce((a, s) => a + s.length, 0)
 }
 
+function totalMinutes(log: DayLog): number {
+  return Object.values(log.times ?? {}).reduce(
+    (a, entries) => a + entries.reduce((b, t) => b + t.min, 0),
+    0,
+  )
+}
+
 function fmtSets(sets: SetEntry[]): string {
   return sets
     .map((s) => `${fmtWeight(s.w)}kg×${s.r}${s.rir !== undefined ? ` @${s.rir}` : ''}`)
     .join(', ')
 }
 
+function fmtTimes(times: TimeEntry[]): string {
+  return times
+    .map((t) => [`${t.min} min`, t.km ? `${fmtWeight(t.km)} km` : '', t.local ?? '']
+      .filter(Boolean)
+      .join(' · '))
+    .join(', ')
+}
+
 function detail(log: DayLog): HTMLElement {
   const box = el('div', 'day-detail')
   for (const [ex, sets] of Object.entries(log.sets)) {
-    box.append(
-      el('div', 'detail-row', [
-        el('div', 'detail-ex', exerciseName(ex)),
-        el('div', 'detail-sets', fmtSets(sets)),
-      ]),
-    )
+    box.append(el('div', 'detail-row', [
+      el('div', 'detail-ex', exerciseName(ex)),
+      el('div', 'detail-sets', fmtSets(sets)),
+    ]))
   }
-  if (log.cardio) {
-    const parts = [`${log.cardio.minutes} min`]
-    if (log.cardio.km) parts.push(`${fmtWeight(log.cardio.km)} km`)
-    if (log.cardio.local) parts.push(log.cardio.local)
-    box.append(
-      el('div', 'detail-row', [
-        el('div', 'detail-ex', 'Corrida'),
-        el('div', 'detail-sets', parts.join(' · ')),
-      ]),
-    )
+  for (const [ex, times] of Object.entries(log.times ?? {})) {
+    box.append(el('div', 'detail-row', [
+      el('div', 'detail-ex', exerciseName(ex)),
+      el('div', 'detail-sets', fmtTimes(times)),
+    ]))
   }
   if (log.note) box.append(el('div', 'detail-note', [icon('note', 15), el('span', '', log.note)]))
   return box
@@ -52,9 +62,7 @@ function detail(log: DayLog): HTMLElement {
 export function renderHistory(root: HTMLElement): void {
   const rerender = () => renderHistory(root)
   root.innerHTML = ''
-  root.append(
-    el('header', 'app-header', el('div', 'header-row', el('h1', '', 'Histórico'))),
-  )
+  root.append(appHeader({ title: 'Histórico', right: avatarButton() }))
 
   const logs = loadLogs()
   const dates = Object.keys(logs).sort().reverse()
@@ -73,9 +81,11 @@ export function renderHistory(root: HTMLElement): void {
     }
 
     const log = logs[date]
-    const title = program.week[log.template]?.title ?? log.template
+    // Treino apagado depois: o dia continua no histórico, só perde o nome.
+    const title = findWorkout(log.template)?.name ?? 'Treino removido'
     const n = setCount(log)
     const vol = volume(log)
+    const min = totalMinutes(log)
     const open = openDays.has(date)
 
     const summary = el('div', 'history-summary')
@@ -85,8 +95,8 @@ export function renderHistory(root: HTMLElement): void {
         el('span', '', [el('b', '', Math.round(vol).toLocaleString('pt-BR')), ' kg']),
       )
     }
-    if (log.cardio) summary.append(el('span', '', [el('b', '', `${log.cardio.minutes}`), ' min de corrida']))
-    if (n === 0 && !log.cardio) summary.append(el('span', '', 'sem registros'))
+    if (min > 0) summary.append(el('span', '', [el('b', '', String(min)), ' min']))
+    if (n === 0 && min === 0) summary.append(el('span', '', 'sem registros'))
 
     const card = el('section', 'history-row', [
       el('div', 'history-line', [

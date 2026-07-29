@@ -1,4 +1,4 @@
-import type { GymItem, Logs, SetEntry } from './types'
+import type { Logs, SetEntry, WorkoutItem } from './types'
 
 export interface Session {
   date: string
@@ -45,7 +45,7 @@ function isPlateau(sessions: Session[]): boolean {
 
 export function computeProgression(
   exercise: string,
-  item: GymItem,
+  item: WorkoutItem,
   logs: Logs,
   today: string,
 ): ProgressionState {
@@ -53,8 +53,9 @@ export function computeProgression(
   if (sessions.length === 0) return { kind: 'primeira-vez' }
 
   const last = sessions[0]
-  const topo = item.reps[1]
-  const alvo = rirTarget(item.rir)
+  const topo = item.reps?.[1] ?? Infinity
+  // Sem RIR alvo, `rirTarget` devolve Infinity e a progressão passa a olhar só as reps.
+  const alvo = rirTarget(item.rir ?? '')
   const hitTop = last.sets.every(
     (s) => s.r >= topo && (s.rir === undefined || s.rir <= alvo),
   )

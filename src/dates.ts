@@ -47,6 +47,14 @@ export function dayNumber(key: string): string {
   return pad(dateFromKey(key).getDate())
 }
 
+const MONTHS_SHORT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
+
+/** "27 jul" — usado no cabeçalho da tela Hoje. */
+export function formatDayMonthShort(key: string): string {
+  const d = dateFromKey(key)
+  return `${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
+}
+
 const MONTHS = [
   'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
   'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',

@@ -1,7 +1,4 @@
-import programJson from './program.json'
-import type { DayKey, Program } from './types'
-
-export const program = programJson as unknown as Program
+import type { DayKey } from './types'
 
 export const DAY_KEYS: DayKey[] = [
   'monday',
@@ -21,12 +18,4 @@ export const DAY_NAMES: Record<DayKey, string> = {
   friday: 'Sexta',
   saturday: 'Sábado',
   sunday: 'Domingo',
-}
-
-export function exerciseName(id: string): string {
-  return program.exercises[id]?.name ?? id
-}
-
-export function exerciseNotes(id: string): string {
-  return program.exercises[id]?.notes ?? ''
 }
