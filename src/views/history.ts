@@ -1,8 +1,8 @@
-import { formatShort } from '../dates'
+import { dayNumber, monthLabel, weekdayShort } from '../dates'
 import { exerciseName, program } from '../program'
 import { loadLogs } from '../storage'
 import type { DayLog, SetEntry } from '../types'
-import { el, fmtWeight } from '../ui'
+import { el, fmtWeight, icon } from '../ui'
 
 const openDays = new Set<string>()
 
@@ -38,50 +38,72 @@ function detail(log: DayLog): HTMLElement {
     const parts = [`${log.cardio.minutes} min`]
     if (log.cardio.km) parts.push(`${fmtWeight(log.cardio.km)} km`)
     if (log.cardio.local) parts.push(log.cardio.local)
-    box.append(el('div', 'detail-row', `🏃 ${parts.join(' · ')}`))
+    box.append(
+      el('div', 'detail-row', [
+        el('div', 'detail-ex', 'Corrida'),
+        el('div', 'detail-sets', parts.join(' · ')),
+      ]),
+    )
   }
-  if (log.note) box.append(el('div', 'detail-note', `📝 ${log.note}`))
+  if (log.note) box.append(el('div', 'detail-note', [icon('note', 15), el('span', '', log.note)]))
   return box
 }
 
 export function renderHistory(root: HTMLElement): void {
   const rerender = () => renderHistory(root)
   root.innerHTML = ''
-  root.append(el('header', 'app-header', el('h1', '', 'Histórico')))
+  root.append(
+    el('header', 'app-header', el('div', 'header-row', el('h1', '', 'Histórico'))),
+  )
 
   const logs = loadLogs()
   const dates = Object.keys(logs).sort().reverse()
 
   if (dates.length === 0) {
-    root.append(el('p', 'empty', 'Nenhum treino registrado ainda. Bora começar? 💪'))
+    root.append(el('p', 'empty', 'Nenhum treino registrado ainda. Bora começar.'))
     return
   }
 
+  let lastMonth = ''
   for (const date of dates) {
+    const month = date.slice(0, 7)
+    if (month !== lastMonth) {
+      root.append(el('div', 'month-label', monthLabel(date)))
+      lastMonth = month
+    }
+
     const log = logs[date]
     const title = program.week[log.template]?.title ?? log.template
     const n = setCount(log)
     const vol = volume(log)
-    const summary: string[] = []
-    if (n > 0) summary.push(`${n} séries · ${vol.toLocaleString('pt-BR')} kg`)
-    if (log.cardio) summary.push(`${log.cardio.minutes} min de corrida`)
-    if (summary.length === 0) summary.push('sem registros')
+    const open = openDays.has(date)
+
+    const summary = el('div', 'history-summary')
+    if (n > 0) {
+      summary.append(
+        el('span', '', [el('b', '', String(n)), ' séries']),
+        el('span', '', [el('b', '', Math.round(vol).toLocaleString('pt-BR')), ' kg']),
+      )
+    }
+    if (log.cardio) summary.append(el('span', '', [el('b', '', `${log.cardio.minutes}`), ' min de corrida']))
+    if (n === 0 && !log.cardio) summary.append(el('span', '', 'sem registros'))
 
     const card = el('section', 'card history-card', [
       el('div', 'history-line', [
-        el('div', '', [
-          el('div', 'history-date', `${formatShort(date)} — ${title}`),
-          el('div', 'history-summary', summary.join(' · ')),
+        el('div', 'date-chip', [
+          el('span', 'd', dayNumber(date)),
+          el('span', 'w', weekdayShort(date)),
         ]),
-        el('div', 'history-chevron', openDays.has(date) ? '▾' : '▸'),
+        el('div', 'history-main', [el('div', 'history-title', title), summary]),
+        el('div', `history-chevron${open ? ' open' : ''}`, icon('chevron', 18)),
       ]),
     ])
     card.addEventListener('click', () => {
-      if (openDays.has(date)) openDays.delete(date)
+      if (open) openDays.delete(date)
       else openDays.add(date)
       rerender()
     })
-    if (openDays.has(date)) card.append(detail(log))
+    if (open) card.append(detail(log))
     root.append(card)
   }
 }

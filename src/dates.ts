@@ -38,3 +38,22 @@ export function formatDayMonth(key: string): string {
   const d = dateFromKey(key)
   return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`
 }
+
+export function weekdayShort(key: string): string {
+  return WEEKDAY_SHORT[dateFromKey(key).getDay()]
+}
+
+export function dayNumber(key: string): string {
+  return pad(dateFromKey(key).getDate())
+}
+
+const MONTHS = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+]
+
+/** "julho de 2026" — cabeçalho de grupo no histórico. */
+export function monthLabel(key: string): string {
+  const d = dateFromKey(key)
+  return `${MONTHS[d.getMonth()]} de ${d.getFullYear()}`
+}

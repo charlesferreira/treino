@@ -4,13 +4,13 @@ import { mkdirSync } from 'node:fs'
 
 const barbell = (pad) => `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="${pad ? 0 : 96}" fill="#0e1013"/>
+  <rect width="512" height="512" rx="${pad ? 0 : 96}" fill="#0a0b0e"/>
   <g transform="translate(256 256) scale(${pad ? 0.72 : 1}) translate(-256 -256)">
-    <rect x="76" y="240" width="360" height="32" rx="16" fill="#9aa4b2"/>
-    <rect x="112" y="176" width="40" height="160" rx="12" fill="#4ade80"/>
-    <rect x="164" y="196" width="32" height="120" rx="10" fill="#4ade80"/>
-    <rect x="360" y="176" width="40" height="160" rx="12" fill="#4ade80"/>
-    <rect x="316" y="196" width="32" height="120" rx="10" fill="#4ade80"/>
+    <rect x="76" y="240" width="360" height="32" rx="16" fill="#98a1b0"/>
+    <rect x="112" y="176" width="40" height="160" rx="12" fill="#ccfa4e"/>
+    <rect x="164" y="196" width="32" height="120" rx="10" fill="#ccfa4e"/>
+    <rect x="360" y="176" width="40" height="160" rx="12" fill="#ccfa4e"/>
+    <rect x="316" y="196" width="32" height="120" rx="10" fill="#ccfa4e"/>
   </g>
 </svg>`
 
