@@ -6,6 +6,8 @@ const SETTINGS_KEY = 'treino.settings'
 export interface Settings {
   sound?: boolean
   lastExport?: string
+  /** Esconde os avisos de progressão (subir carga, meta, platô). Ausente = visíveis. */
+  hideProgressionTips?: boolean
 }
 
 export function loadLogs(): Logs {

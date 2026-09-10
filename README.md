@@ -25,6 +25,10 @@ O histórico nunca é apagado por mudança de programa. Apagar um treino não ap
 
 [`src/program.json`](src/program.json) virou só a **semente** usada em duas situações: aparelho que já tinha histórico do formato antigo (migra preservando os ids dos treinos e exercícios) e importação de um backup antigo, que só tem histórico. Aparelho novo e vazio cai no onboarding: nome, iniciais viram avatar, e monta o primeiro treino.
 
+## Dicas de progressão
+
+Na tela Hoje, cada exercício por carga mostra avisos de progressão: subir a carga, meta de reps, platô. Quem não quer ler isso desliga em **Perfil → Treino → Dicas de progressão**. Só os avisos somem; a linha com a última sessão continua, porque é registro e não conselho. A escolha fica nas configurações do aparelho e vai junto no backup.
+
 ## Backup e restauração
 
 Os dados vivem só no aparelho, e é assim que duas pessoas usam o mesmo endereço sem se misturar. Trocar de celular exige backup. No **Perfil** (bolinha do avatar):
