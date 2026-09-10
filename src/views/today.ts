@@ -5,6 +5,7 @@ import {
   addTime,
   getDayLog,
   loadLogs,
+  loadSettings,
   removeSet,
   removeTime,
   setNote,
@@ -121,7 +122,11 @@ function getDraft(ex: string, item: WorkoutItem, todaySets: SetEntry[], last?: S
 function progressionBanner(item: WorkoutItem, prog: ProgressionState): HTMLElement[] {
   const [lo, hi] = item.reps ?? [8, 12]
   const out: HTMLElement[] = []
+  // Com as dicas desligadas no Perfil, sobra só o registro da última sessão:
+  // aquilo é o que foi feito, não conselho.
+  const tips = !loadSettings().hideProgressionTips
   if (prog.kind === 'primeira-vez') {
+    if (!tips) return out
     out.push(
       el('div', 'banner banner-first',
         `Primeira vez — anote as cargas. Alvo: ${item.sets} × ${lo}–${hi}.`),
@@ -135,6 +140,7 @@ function progressionBanner(item: WorkoutItem, prog: ProgressionState): HTMLEleme
       el('span', 'last-sets', fmtSets(prog.last.sets)),
     ]),
   )
+  if (!tips) return out
   if (prog.kind === 'subir-carga') {
     out.push(el('div', 'banner banner-up', [
       icon('trend', 17),

@@ -1,6 +1,6 @@
 import { todayKey } from '../dates'
 import { initials, loadPlan, loadProfile, saveProfile, seedFromProgram, hasPlan } from '../plan'
-import { exportBackup, importBackup, loadSettings } from '../storage'
+import { exportBackup, importBackup, loadSettings, saveSettings } from '../storage'
 import { button, el, icon } from '../ui'
 import { appHeader } from './chrome'
 import { openTextSheet } from './pickers'
@@ -85,6 +85,25 @@ export function renderProfile(root: HTMLElement): void {
   ], () => {
     location.hash = '#treinos'
   }))
+
+  // A linha inteira alterna. O toggle é só o estado — um alvo de 50px cercado
+  // de texto morto seria pior de acertar.
+  const tipsOn = !settings.hideProgressionTips
+  const tipsRow = button('setting-row', [
+    el('span', 'setting-text', [
+      el('div', 'nav-title', 'Dicas de progressão'),
+      el('div', 'nav-sub',
+        'Os avisos de subir carga, meta de reps e platô na tela Hoje. A última sessão continua aparecendo.'),
+    ]),
+    el('span', `toggle${tipsOn ? ' on' : ''}`, el('span', 'knob')),
+  ], () => {
+    saveSettings({ ...loadSettings(), hideProgressionTips: tipsOn })
+    rerender()
+  })
+  tipsRow.setAttribute('role', 'switch')
+  tipsRow.setAttribute('aria-checked', String(tipsOn))
+
+  root.append(el('div', 'section-title', 'Treino'), tipsRow)
 
   const fileInput = backupFileInput(() => {
     location.hash = '#historico'

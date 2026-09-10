@@ -1215,6 +1215,27 @@ textarea {
   background: var(--surface);
 }
 
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: calc(100% + var(--gutter) * 2);
+  margin: 0 calc(var(--gutter) * -1);
+  padding: 16px var(--gutter);
+  border-bottom: 1px solid var(--hairline);
+  text-align: left;
+}
+
+.setting-row:active {
+  transform: none;
+  background: var(--surface);
+}
+
+.setting-text {
+  min-width: 0;
+}
+
 .nav-title {
   font-size: 17px;
   font-weight: 700;
