@@ -164,6 +164,9 @@ interface EntryDao {
     @Query("SELECT * FROM set_entry ORDER BY session_id, exercise_id, position")
     suspend fun getAllSets(): List<SetEntryEntity>
 
+    @Query("SELECT * FROM set_entry ORDER BY session_id, exercise_id, position")
+    fun observeAllSets(): Flow<List<SetEntryEntity>>
+
     @Query("SELECT * FROM set_entry WHERE id = :id")
     suspend fun getSet(id: String): SetEntryEntity?
 
@@ -198,6 +201,9 @@ interface EntryDao {
 
     @Query("SELECT * FROM time_entry ORDER BY session_id, exercise_id, position")
     suspend fun getAllTimes(): List<TimeEntryEntity>
+
+    @Query("SELECT * FROM time_entry ORDER BY session_id, exercise_id, position")
+    fun observeAllTimes(): Flow<List<TimeEntryEntity>>
 
     @Query("SELECT * FROM time_entry WHERE id = :id")
     suspend fun getTime(id: String): TimeEntryEntity?

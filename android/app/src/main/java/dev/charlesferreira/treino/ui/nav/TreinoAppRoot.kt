@@ -29,7 +29,9 @@ import androidx.navigation.toRoute
 import dev.charlesferreira.treino.BuildConfig
 import dev.charlesferreira.treino.appContainer
 import dev.charlesferreira.treino.debug.TimerSpikeScreen
-import dev.charlesferreira.treino.ui.screens.EvolutionScreen
+import dev.charlesferreira.treino.ui.evolution.EvolutionScreen
+import dev.charlesferreira.treino.ui.evolution.ExerciseProgressScreen
+import dev.charlesferreira.treino.ui.evolution.HistoryDayScreen
 import dev.charlesferreira.treino.ui.screens.OnboardingScreen
 import dev.charlesferreira.treino.ui.screens.PlaceholderScreen
 import dev.charlesferreira.treino.ui.screens.ProfileScreen
@@ -64,6 +66,8 @@ private fun TreinoNavHost(start: Any) {
         destination == null -> null
         destination.hasRoute<TodayRoute>() -> Tab.TODAY
         destination.hasRoute<EvolutionRoute>() -> Tab.EVOLUTION
+        // `b-exercise` keeps the tab bar, as in the design.
+        destination.hasRoute<ExerciseProgressRoute>() -> Tab.EVOLUTION
         destination.hasRoute<WorkoutsRoute>() -> Tab.WORKOUTS
         else -> null
     }
@@ -97,7 +101,13 @@ private fun TreinoNavHost(start: Any) {
                     onSummary = { date -> nav.navigate(SummaryRoute(date)) { launchSingleTop = true } },
                 )
             }
-            composable<EvolutionRoute> { EvolutionScreen(onProfile = profile) }
+            composable<EvolutionRoute> {
+                EvolutionScreen(
+                    onProfile = profile,
+                    onDay = { date -> nav.navigate(HistoryDayRoute(date)) { launchSingleTop = true } },
+                    onExercise = { id -> nav.navigate(ExerciseProgressRoute(id)) { launchSingleTop = true } },
+                )
+            }
             composable<WorkoutsRoute> { WorkoutsScreen(onProfile = profile) }
             composable<ProfileRoute> {
                 ProfileScreen(
@@ -109,8 +119,8 @@ private fun TreinoNavHost(start: Any) {
             }
 
             composable<SummaryRoute> { SummaryScreen(it.toRoute<SummaryRoute>().date, onClose = back) }
-            composable<HistoryDayRoute> { PlaceholderScreen(it.toRoute<HistoryDayRoute>().date, back) }
-            composable<ExerciseProgressRoute> { PlaceholderScreen("Progressão", back) }
+            composable<HistoryDayRoute> { HistoryDayScreen(it.toRoute<HistoryDayRoute>().date, onBack = back) }
+            composable<ExerciseProgressRoute> { ExerciseProgressScreen(it.toRoute<ExerciseProgressRoute>().exerciseId, onBack = back) }
             composable<WorkoutEditRoute> { PlaceholderScreen("Editar treino", back) }
             composable<WorkoutItemEditRoute> { PlaceholderScreen("Exercício no treino", back) }
             composable<ExercisePickerRoute> { PlaceholderScreen("Adicionar exercício", back) }
@@ -127,7 +137,18 @@ private fun TreinoNavHost(start: Any) {
             }
         }
         if (tab != null) {
-            TabBar(selected = tab, onSelect = { nav.selectTab(it) }, modifier = Modifier.align(Alignment.BottomCenter))
+            TabBar(
+                selected = tab,
+                onSelect = { t ->
+                    // Evolução again from the exercise's progression goes back to the tab's root.
+                    if (t == Tab.EVOLUTION && destination?.hasRoute<ExerciseProgressRoute>() == true) {
+                        nav.popBackStack<EvolutionRoute>(inclusive = false)
+                    } else {
+                        nav.selectTab(t)
+                    }
+                },
+                modifier = Modifier.align(Alignment.BottomCenter),
+            )
         }
         // The rest, then the sheets of the current screen, over the tab bar.
         overlay.floating?.invoke()

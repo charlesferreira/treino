@@ -8,6 +8,10 @@ import kotlin.math.round
 object PtBr {
     private val MONTHS = listOf("jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez")
     private val WEEKDAYS = listOf("segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo")
+    private val MONTH_NAMES = listOf(
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+    )
 
     /** "2026-11-26" → "26 nov"; com [padDay], "01 out" (coluna da revisão de cargas). */
     fun shortDate(date: String, padDay: Boolean = false): String {
@@ -21,6 +25,12 @@ object PtBr {
         val d = LocalDate.parse(date)
         return "${shortDate(date)}, ${WEEKDAYS[d.dayOfWeek.value - 1]}"
     }
+
+    /** "2026-11-26" → "Novembro" (calendário da Evolução). */
+    fun monthName(date: String): String = MONTH_NAMES[LocalDate.parse(date).monthValue - 1]
+
+    /** "2026-11-26" → "qui" (coluna do dia na Evolução). */
+    fun weekdayShort(date: String): String = WEEKDAYS[LocalDate.parse(date).dayOfWeek.value - 1].take(3)
 
     /** "16", "2,5", "6.840": até 1 casa decimal, vírgula, ponto de milhar. */
     fun number(value: Double): String {

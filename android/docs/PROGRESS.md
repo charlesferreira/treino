@@ -24,7 +24,12 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     PNG de cada design.
   - [x] Hoje: descanso expandido, em pílula e no fim (`ui/today/RestViews.kt`), ligado ao timer.
     Conferido no AVD "Treino" contra `b-rest`, `b-rest-pill` e `b-rest-done`.
-  - [ ] Evolução, Treinos, Perfil
+  - [x] Evolução (`ui/evolution/`): Dias (calendário de 3 semanas e dias com séries, duração e
+    volume), Dia do histórico (com "Editar"), Exercícios (3 números de 30 dias, filtro por grupo,
+    lista com mini-gráfico) e Progressão do exercício (gráfico em Canvas com Carga máx, Volume e
+    Melhor série). Estado puro testado em `EvolutionStateTest` e escala do gráfico em
+    `ChartMathTest`. Conferido no AVD "Treino" contra o PNG de cada design.
+  - [ ] Treinos, Perfil
 - [x] Fase 4: timer de verdade. `workout/WorkoutTimer.kt` liga o Room ao timer; regras puras em
   `ui/today/RestPlan.kt` (testes em `RestPlanTest`). No AVD: alarme com a tela apagada disparou 10 ms
   depois do agendado; "Registrar série" na cortina com o processo morto gravou a série no Room e
@@ -124,7 +129,51 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   - "Terminar treino" encerra o descanso em andamento.
   - Permissão de notificação pedida no "Começar treino".
 
+- Fase 3, Evolução:
+  - Calendário dos Dias: as 3 últimas semanas (segunda primeiro, a atual por último), como o design
+    desenha; o título é o mês de hoje e o número conta os dias com treino nesse mês. Laranja = dia
+    com carga, anel laranja = só tempo, anel claro = hoje.
+  - Lista dos Dias: um cartão por mês; os meses anteriores ganham o nome em cima (`OUTUBRO`), o
+    atual já está no calendário. Dia de carga: séries (séries + tempos), duração só quando há
+    horário (importados não têm) e volume em kg inteiros. Dia só de tempo: minutos, km e local.
+    Sem treino ligado (apagado): o nome do primeiro exercício.
+  - As linhas "máx 18 kg" ficam no dia de carga mais recente (uma corrida depois dele não tem o
+    que mostrar), até 3, as que subiram primeiro, na ordem em que foram feitas. Ali a unidade fica
+    curta como no design ("máx 18 kg"); o "kg por halter" aparece no Dia, na lista de Exercícios
+    ("por halter") e na Progressão ("Carga máxima por halter").
+  - Dia do histórico: o volume é rotulado ("volume 9.840 kg") apesar do design mostrar só o número,
+    pela regra do plano. "Editar" vira "Pronto" e transforma cada série/tempo em botão que abre as
+    folhas do Hoje (`EditSetSheet`, `EditTimeSheet`) e a nota em botão da `NoteSheet` (sem nota,
+    aparece "Nota do dia"). Ordem dos exercícios: a do treino, depois a hora da primeira série.
+  - Exercícios: só exercícios de carga com série. "Subiu" = a última subida foi nos últimos 30 dias
+    e a carga ficou lá desde então: texto e mini-gráfico laranja, "+2 kg em 26 nov" (placas na
+    máquina). Senão "igual desde 3 nov" cinza; uma sessão só: "1ª vez em 3 nov". O número
+    "Subiram" conta essas linhas (o design mostra um "igual desde 3 nov" dentro de 30 dias; aqui
+    ficaria laranja). Ordem: as que subiram, da subida mais recente; depois pela última sessão. O
+    número à direita é a carga máxima da última sessão. Treinos = dias com registro em 30 dias;
+    Volume = 30 dias contra os 30 anteriores ("–" sem base).
+  - Filtro: Superior = peito, costas, ombros; Pernas = quadríceps, posteriores, glúteos,
+    panturrilha; Braços = bíceps, tríceps, antebraço; o resto só em Todos. Só aparecem os grupos
+    que têm exercício, e a fileira some se só sobrar Todos.
+  - Mini-gráfico: as 7 últimas sessões, maior em y 4 e menor em 22; plano em 13.
+  - Progressão: o número grande é a carga máxima de todas as sessões. O gráfico mostra as 8 últimas
+    (Carga máx; Volume do exercício; Melhor série = carga × reps da melhor série da sessão), escala
+    do SVG do design (valor maior na linha 30, menor na 100, meio na 65; plano no meio com um passo
+    acima e abaixo), datas em pontos alternados. "+4 kg em 7 sem" compara a primeira e a última
+    dessas sessões ("igual em", "dias" abaixo de 7). "Mais reps com X": X é a carga logo abaixo da
+    máxima (a própria se nunca mudou), na sessão com mais reps nela. A lista mostra todas as
+    sessões, "↑" quando a carga subiu. O selo de equipamento vem do exercício ("Halteres 2×",
+    "Máquina", "Polia", "Barra"...); "outro" fica sem selo.
+  - A Progressão mantém a barra de abas, como no design; tocar Evolução nela volta para a raiz da aba.
+  - `SampleData` (debug): Superior B por 9 semanas (63 a 7 dias atrás) e Pernas A (leg press e
+    extensora na máquina, stiff com halteres) dois dias antes de cada uma, cargas subindo um passo
+    a cada 3 semanas; as 2 sessões mais antigas de cada são "importadas" (sem horário); corrida
+    semanal (a última 6 dias atrás, a mais velha sem km nem local); nota no Superior B de 7 dias
+    atrás. A última sessão do Superior B e a corrida de 6 dias atrás continuam como antes, então o
+    Hoje segue sugerindo o Superior B. `logSet`/`logTime` aceitam `loggedAt` nulo para isso.
+
 ## Próximo passo
 
-Evolução, Treinos e Perfil (Fase 3); a Fase 2 (tela de backup) continua pendente. A Fase 4 ainda
+Treinos e Perfil (Fase 3); a Fase 2 (tela de backup) continua pendente. Na Evolução, falta ver
+com um backup real do PWA (muitos meses de dias importados). A Fase 4 ainda
 precisa do S23 (`SPIKE.md`, "Para testar no S23", itens 9 a 11).

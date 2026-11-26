@@ -113,11 +113,6 @@ fun WorkoutsScreen(onProfile: () -> Unit) {
 }
 
 @Composable
-fun EvolutionScreen(onProfile: () -> Unit) {
-    TabPlaceholder("Evolução", onProfile) {}
-}
-
-@Composable
 private fun TabPlaceholder(title: String, onProfile: () -> Unit, content: @Composable () -> Unit) {
     val container = appContainer()
     val settings by container.settings.settings.collectAsStateWithLifecycle(dev.charlesferreira.treino.data.Settings())
@@ -194,7 +189,7 @@ fun ProfileScreen(onBack: () -> Unit, onLoadReview: () -> Unit, onBackup: () -> 
             SectionLabel("Debug")
             Card {
                 CardRow("Timer (spike da Fase 0)", onClick = onTimerSpike, trailing = { Chevron() })
-                CardRow("Criar treino de exemplo", subtitle = "Superior B, 7 exercícios", divider = true, onClick = vm::createSampleWorkout)
+                CardRow("Criar treino de exemplo", subtitle = "Superior B, Pernas A e corridas, 9 semanas", divider = true, onClick = vm::createSampleWorkout)
             }
         }
     }

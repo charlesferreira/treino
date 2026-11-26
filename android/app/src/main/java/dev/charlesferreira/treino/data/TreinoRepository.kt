@@ -112,6 +112,14 @@ class TreinoRepository(
         }
     }
 
+    /** Every session, oldest first. */
+    fun observeSessions(): Flow<List<Session>> = sessions.observeAll().map { list -> list.map { it.toDomain() } }
+
+    /** Every set of every session (Evolução reads the whole log). */
+    fun observeAllSets(): Flow<List<SetEntry>> = entries.observeAllSets().map { list -> list.map { it.toDomain() } }
+
+    fun observeAllTimes(): Flow<List<TimeEntry>> = entries.observeAllTimes().map { list -> list.map { it.toDomain() } }
+
     /** Evolução > Dias: days with sets, times or a note, newest first. */
     fun observeDays(): Flow<List<DaySummary>> = sessions.observeDays().map { rows ->
         rows.map { DaySummary(it.session.toDomain(), it.workoutName, it.setCount, it.timeCount) }
@@ -169,7 +177,7 @@ class TreinoRepository(
         exerciseId: String,
         weightKg: Double,
         reps: Int,
-        loggedAt: Long = now(),
+        loggedAt: Long? = now(),
     ): SetEntry = db.withTransaction {
         val session = ensureSession(date)
         val position = entries.getSets(session.id, exerciseId).size
@@ -199,7 +207,7 @@ class TreinoRepository(
         minutes: Double,
         km: Double? = null,
         place: String? = null,
-        loggedAt: Long = now(),
+        loggedAt: Long? = now(),
     ): TimeEntry = db.withTransaction {
         val session = ensureSession(date)
         val position = entries.getTimes(session.id, exerciseId).size
