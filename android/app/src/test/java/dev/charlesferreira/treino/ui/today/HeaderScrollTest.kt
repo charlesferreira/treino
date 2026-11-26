@@ -38,7 +38,7 @@ class HeaderScrollTest {
         val v = HeaderScroll.values(0.5f)
         close(1f, v.early); close(0f, v.late)
         close(117f, v.height); close(50f, v.paddingTop); close(10f, v.gap)
-        close(0.47f, v.backgroundAlpha); close(0.03f, v.borderAlpha)
+        close(0.94f, v.backgroundAlpha); close(0.03f, v.borderAlpha)
         // What leaves is gone, what arrives has not started.
         close(0f, v.eyebrowAlpha); close(8.5f, v.eyebrowHeight)
         close(24f, v.titleSize); close(0f, v.titleGap)

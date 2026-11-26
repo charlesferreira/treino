@@ -76,7 +76,11 @@ object HeaderScroll {
             height = lerp(150f, 84f),
             paddingTop = lerp(54f, 46f),
             gap = lerp(12f, 8f),
-            backgroundAlpha = lerp(0f, 0.94f),
+            // The prototype lerps 0 → 0.94 over the whole scroll, but its content is empty cards
+            // of nearly the background's color; with real text, 47% at half scroll leaves the list
+            // legible under the rows. Same 0 → 0.94, reached with the eyebrow (early), so at 50%
+            // the header reads as the prototype looks.
+            backgroundAlpha = 0.94f * early,
             borderAlpha = lerp(0f, 0.06f),
             eyebrowAlpha = 1 - early,
             eyebrowHeight = lerp(17f, 0f),

@@ -76,7 +76,7 @@ fun WorkoutsScreen(onProfile: () -> Unit, onWorkout: (String) -> Unit, onExercis
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .statusBarsPadding()
-            .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = TabBarDefaults.ContentClearance),
+            .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = TabBarDefaults.contentClearance()),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Row(Modifier.padding(start = 6.dp, end = 6.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {

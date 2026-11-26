@@ -14,6 +14,7 @@ Fase 0 do `docs/native-plan.md`. Validado em 26/11/2026 no emulador, AVD "Treino
 | Doze forçado, 90 s | 04:42:49.670 | 04:42:49.678 | 8 ms |
 | Doze forçado, 15 s, build final | 04:45:04.897 | 04:45:04.908 | 11 ms |
 | App atualizado no meio do descanso (`adb install -r`), alarme reposto pelo `MY_PACKAGE_REPLACED` | 04:44:34.020 | 04:44:34.055 | 35 ms (até o serviço tocar) |
+| Teste de ponta a ponta de 26 nov: descanso real após a série 2 (−15s quatro vezes), app em segundo plano, `KEYCODE_SLEEP`, `force-idle` (`get deep` = `IDLE`), 60 s | 06:56:56.738 | 06:56:56.765 | 27 ms (31 ms até tocar) |
 
 "Disparou" é o `onReceive` do receiver. O serviço começa o alerta 3 a 4 ms depois.
 Em todos os casos, no mesmo segundo:

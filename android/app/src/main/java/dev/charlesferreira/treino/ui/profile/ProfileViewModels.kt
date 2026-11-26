@@ -159,7 +159,12 @@ data class BackupUi(
     val importing: Boolean,
 )
 
-class BackupViewModel(private val repository: TreinoRepository, private val resolver: ContentResolver) : ViewModel() {
+class BackupViewModel(
+    private val repository: TreinoRepository,
+    private val resolver: ContentResolver,
+    /** Stops the rest and drops the timer's notifications before the data is replaced. */
+    private val resetTimer: () -> Unit = {},
+) : ViewModel() {
     private val chosen = MutableStateFlow<ChosenFile?>(null)
     private val error = MutableStateFlow<String?>(null)
     private val importing = MutableStateFlow(false)
@@ -213,6 +218,7 @@ class BackupViewModel(private val repository: TreinoRepository, private val reso
         viewModelScope.launch {
             try {
                 repository.replaceAll(ready.preview.data)
+                resetTimer()
                 chosen.value = null
                 then()
             } catch (e: Exception) {

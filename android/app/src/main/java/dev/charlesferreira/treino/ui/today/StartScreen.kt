@@ -58,7 +58,7 @@ fun StartScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .statusBarsPadding()
-                .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = TabBarDefaults.ContentClearance + 54.dp + 14.dp),
+                .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = TabBarDefaults.contentClearance() + 54.dp + 14.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Row(

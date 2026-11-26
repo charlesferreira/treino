@@ -38,13 +38,14 @@ import dev.charlesferreira.treino.ui.theme.TreinoType
 /**
  * `p-backup`: export (format 3, saved where the person picks through the system's "Salvar como"),
  * import (the system file picker, then the preview of what the file brings, then "Importar"
- * replaces everything). [onImported] runs after the data was replaced.
+ * replaces everything). [onImported] runs after the data was replaced. From the first use
+ * ([firstUse]) there is nothing to export, so only the import shows.
  */
 @Composable
-fun BackupScreen(onBack: () -> Unit, onImported: () -> Unit) {
+fun BackupScreen(onBack: () -> Unit, onImported: () -> Unit, firstUse: Boolean = false) {
     val container = appContainer()
     val resolver = LocalContext.current.contentResolver
-    val vm = viewModel { BackupViewModel(container.repository, resolver) }
+    val vm = viewModel { BackupViewModel(container.repository, resolver, container.workoutTimer::resetForImport) }
     val ui by vm.state.collectAsStateWithLifecycle()
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -70,15 +71,17 @@ fun BackupScreen(onBack: () -> Unit, onImported: () -> Unit) {
                 TText("Último backup", style = TreinoType.Body.copy(fontWeight = FontWeight.W600))
                 TText(state.lastBackup, style = TreinoType.Mono, color = TreinoColors.TextDim)
             }
-            PrimaryButton(
-                "Exportar dados",
-                onClick = { exportLauncher.launch(vm.exportFileName()) },
-                icon = TreinoIcons.Download,
-                height = 48.dp,
-                fontSize = 15.sp,
-                iconSize = 20.dp,
-                iconStroke = 2f,
-            )
+            if (!firstUse) {
+                PrimaryButton(
+                    "Exportar dados",
+                    onClick = { exportLauncher.launch(vm.exportFileName()) },
+                    icon = TreinoIcons.Download,
+                    height = 48.dp,
+                    fontSize = 15.sp,
+                    iconSize = 20.dp,
+                    iconStroke = 2f,
+                )
+            }
             GhostButton(
                 "Importar arquivo",
                 onClick = { importLauncher.launch(arrayOf("application/json", "*/*")) },

@@ -215,7 +215,7 @@ data class ItemDraft(
             val lo = PtBr.number(it.min)
             val hi = PtBr.number(it.max)
             if (lo == hi) lo else "$lo–$hi"
-        } ?: "–"
+        } ?: "-"
         return listOf(
             "Séries" to sets.toString(),
             (if (kind == ExerciseKind.TIME) "Minutos" else "Reps") to rangeText,

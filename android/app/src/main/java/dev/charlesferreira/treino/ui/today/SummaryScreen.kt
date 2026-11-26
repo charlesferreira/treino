@@ -97,7 +97,7 @@ fun SummaryScreen(date: String, onClose: () -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Tile(
                         label = "Duração",
-                        value = ui.minutes?.toString() ?: "–",
+                        value = ui.minutes?.toString() ?: "-",
                         suffix = if (ui.minutes != null) " min" else null,
                         compare = prev?.let { p -> ui.previousMinutes?.let { "$p: $it" } },
                     )

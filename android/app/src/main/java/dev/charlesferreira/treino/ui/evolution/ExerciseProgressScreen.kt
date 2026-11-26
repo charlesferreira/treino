@@ -73,7 +73,7 @@ fun ExerciseProgressScreen(exerciseId: String, onBack: () -> Unit) {
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .statusBarsPadding()
-            .padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = TabBarDefaults.ContentClearance),
+            .padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = TabBarDefaults.contentClearance()),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -122,7 +122,7 @@ fun ExerciseProgressScreen(exerciseId: String, onBack: () -> Unit) {
                     TText(ui.maxLabel, style = TreinoType.Label, maxLines = 1)
                     TText(
                         buildAnnotatedString {
-                            append(ui.maxKg?.let(PtBr::number) ?: "–")
+                            append(ui.maxKg?.let(PtBr::number) ?: "-")
                             withStyle(SpanStyle(fontSize = 18.sp, color = TreinoColors.TextFaint)) { append(" kg") }
                         },
                         style = TreinoType.mono(44.sp, weight = FontWeight.W700).copy(lineHeight = 46.sp),

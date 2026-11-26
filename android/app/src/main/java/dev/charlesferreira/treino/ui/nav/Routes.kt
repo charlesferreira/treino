@@ -28,7 +28,8 @@ import kotlinx.serialization.Serializable
 @Serializable data class ExercisePickerRoute(val workoutId: String? = null)
 
 // Perfil
-@Serializable data object BackupRoute
+/** [firstUse]: opened from the first use, with nothing to export yet. */
+@Serializable data class BackupRoute(val firstUse: Boolean = false)
 @Serializable data object LoadReviewRoute
 
 /** Debug builds only: the Phase 0 timer screen. */

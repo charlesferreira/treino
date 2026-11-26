@@ -49,14 +49,18 @@ object TabBarDefaults {
     /** The design's bottom gap; it grows to clear a tall navigation bar (3 buttons). */
     val Bottom = 24.dp
 
-    /** What a tab screen leaves free at the bottom (the design's primary button sits at 104). */
-    val ContentClearance = 104.dp
-
     @Composable
     fun bottomOffset(): Dp {
         val nav = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
         return maxOf(Bottom, nav + 8.dp)
     }
+
+    /**
+     * What a tab screen leaves free at the bottom so its last item ends above the bar: 104 dp with
+     * gesture navigation (the design's primary button sits at 104), more with 3 buttons.
+     */
+    @Composable
+    fun contentClearance(): Dp = bottomOffset() + Height + 18.dp
 }
 
 /**

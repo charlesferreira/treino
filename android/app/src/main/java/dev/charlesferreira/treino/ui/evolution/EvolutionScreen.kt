@@ -64,7 +64,7 @@ fun EvolutionScreen(onProfile: () -> Unit, onDay: (String) -> Unit, onExercise: 
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .statusBarsPadding()
-            .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = TabBarDefaults.ContentClearance),
+            .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = TabBarDefaults.contentClearance()),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(Modifier.padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -236,7 +236,7 @@ private fun OverviewCard(o: OverviewUi) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Tile("Subiram", "${o.risen}", "em 30 dias", TreinoColors.Accent)
             Tile("Treinos", "${o.workouts}", "em 30 dias")
-            Tile("Volume", o.volumeChangePercent?.let(::percentText) ?: "–", "vs 30 dias antes")
+            Tile("Volume", o.volumeChangePercent?.let(::percentText) ?: "-", "vs 30 dias antes")
         }
     }
 }

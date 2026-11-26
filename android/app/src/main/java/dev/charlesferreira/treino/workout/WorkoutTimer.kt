@@ -111,6 +111,20 @@ class WorkoutTimer(private val app: Context, private val repository: TreinoRepos
         if (info == null) notifications.cancelWorkout() else notifications.notifyWorkout(info)
     }
 
+    /**
+     * Before a backup replaces everything: the rest, its alarm, its done heads-up and the
+     * between-sets notification belong to the old data, so they all go. [refreshNotification]
+     * (the watcher) posts a new one if the imported data has a workout in progress today.
+     */
+    fun resetForImport() {
+        RestTimer.skip(app)
+        val notifications = RestNotifications(app)
+        notifications.cancelOngoing()
+        notifications.cancelDone()
+        notifications.cancelWorkout()
+        Log.i(RestLog.TAG, "timer reset for an import")
+    }
+
     /** Refreshes the notification on every change of the log, the workouts or the rest, while the process lives. */
     @OptIn(FlowPreview::class)
     fun watch(scope: CoroutineScope) {

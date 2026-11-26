@@ -93,7 +93,7 @@ private fun TreinoNavHost(start: Any) {
                         nav.navigate(TodayRoute) { popUpTo<OnboardingRoute> { inclusive = true } }
                         nav.selectTab(Tab.WORKOUTS)
                     },
-                    onBackup = { nav.navigate(BackupRoute) },
+                    onBackup = { nav.navigate(BackupRoute(firstUse = true)) },
                 )
             }
             composable<TodayRoute> {
@@ -122,7 +122,7 @@ private fun TreinoNavHost(start: Any) {
                 ProfileScreen(
                     onBack = back,
                     onLoadReview = { nav.navigate(LoadReviewRoute) },
-                    onBackup = { nav.navigate(BackupRoute) },
+                    onBackup = { nav.navigate(BackupRoute()) },
                     onTimerSpike = { nav.navigate(TimerSpikeRoute) },
                 )
             }
@@ -157,6 +157,7 @@ private fun TreinoNavHost(start: Any) {
             }
             composable<BackupRoute> {
                 BackupScreen(
+                    firstUse = it.toRoute<BackupRoute>().firstUse,
                     onBack = back,
                     // Everything was replaced: start over at Hoje (from the first use too), then
                     // show the days that came in.

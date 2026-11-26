@@ -1,5 +1,92 @@
 # Treino Android: progresso
 
+## Para ler de manhã (26 nov 2026)
+
+As fases 0 a 4 estão prontas e verificadas no emulador (AVD "Treino", Android 16). São 115 testes JVM
+passando e um teste de ponta a ponta sem crash. Tudo está na `main` do github.com/charlesferreira/treino,
+pasta `android/`. O PWA da raiz não mudou.
+
+### Onde está o APK
+
+- `~/Downloads/treino-debug-2026-11-26.apk` (12,4 MB, debug, assinatura de debug).
+- Para gerar de novo: `cd android && ./gradlew :app:assembleDebug`. O arquivo sai em
+  `app/build/outputs/apk/debug/app-debug.apk`.
+- O release assinado é a Fase 5. Falta o `android/keystore.properties`, igual ao do zazen.
+
+### O que testar no S23, passo a passo
+
+1. **Instalar e migrar o PWA.** Instale com `adb install -r ~/Downloads/treino-debug-2026-11-26.apk`.
+   No PWA do celular, exporte o backup. Abra o Treino e siga "Já tenho um backup" e "Importar arquivo".
+   Confira a prévia (dias, séries, treinos, exercícios, período) e toque em Importar. Esse é o primeiro
+   teste com um backup real: até agora só foram usados backups sintéticos no formato do PWA.
+2. **Ver os dados importados:**
+   - Evolução > Dias: os dias aparecem; os dias importados ficam sem duração.
+   - Evolução > Exercícios: carga máxima e "subiu".
+   - Treinos: a sequência.
+3. **Equipamento.** Os exercícios entram como halteres só quando têm "halter" no nome. Se algum for de
+   halteres sem a palavra (por exemplo, Rosca martelo), corrija em Evolução > exercício > selo de
+   equipamento, ou em Treinos > Todos os exercícios.
+4. **Revisar as cargas antigas.** Em Perfil > Revisar cargas antigas, confira as sessões sinalizadas
+   (carga de cerca de 1,6× a mediana das vizinhas). Nada muda sem a sua escolha.
+5. **Um treino de verdade.** Em Hoje, toque em Começar treino e registre uma série. O descanso abre
+   expandido. Minimize, bloqueie o celular e espere o fim. Deve vibrar mesmo no silencioso, tocar os 3
+   bipes (no volume de mídia) e mostrar o heads-up.
+6. **Itens 1 a 11 de "Para testar no S23", em `docs/SPIKE.md`.** Lá estão Now Bar e Live Update,
+   botões na tela bloqueada, mídia em 0, silencioso e Não perturbe, música abaixando, heads-up laranja,
+   Doze natural, notificação entre séries e "Registrar série" com o app fechado. Anote os resultados
+   no próprio SPIKE.md.
+7. **Exportar.** Em Perfil > Backup > Exportar dados, salve o arquivo (format 3). Ele também abre no PWA.
+
+### Decisões que tomei sozinho (detalhes em "Decisões" abaixo)
+
+- **Foco de áudio.** O som do fim pede `AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK`: a música da academia
+  abaixa em vez de pausar. O som continua `USAGE_MEDIA`, como no plano.
+- **Notificação entre séries.** É uma notificação comum, sem serviço em primeiro plano. O "Registrar
+  série" é um broadcast que grava no Room com o app fechado.
+- **Série registrada pela notificação.** Usa a carga e as reps pré-preenchidas, exatamente o que a
+  notificação mostra.
+- **Pré-preenchimento.** Repete a mesma série da última sessão. Num exercício nunca feito, repete a
+  série anterior de hoje.
+- **Passos por equipamento.** Halter 2 kg, barra 2 kg, máquina 1 placa (placa de 5 kg, ajustável).
+  Também decidi: cabo 2,5 kg, peso corporal 2 kg, outro 1 kg.
+- **Equipamento na importação.** É deduzido do nome; "halter" liga o "conta 2 halteres".
+- **Detector de cargas suspeitas:**
+  - olha só exercícios de halteres;
+  - compara com até 3 sessões antes e 3 depois, e exige pelo menos 2 vizinhas;
+  - sinaliza a partir de 1,6×;
+  - as sessões decididas ficam lembradas no aparelho e não vão no backup.
+- **UUIDs.** São determinísticos a partir dos ids do PWA, então reimportar não duplica nada.
+- **Format 3.** É o format 2 completo, que o PWA lê, mais um bloco `native` com equipamento, passo,
+  horários e UUIDs.
+- **Cabeçalho que encolhe.** Segue o `renderVals()` do design. Mudei uma coisa: o fundo chega a 0,94
+  na metade da rolagem, e não no fim. Com texto de verdade por trás, a lista aparecia demais.
+- **Telas da direção A.** A folha de equipamento e a revisão de cargas foram desenhadas na direção A
+  (verde, Barlow). Fiz com as cores e fontes da direção B e mantive o layout e os textos.
+- **Pequenos acréscimos fora do design:**
+  - folha "Nota do dia";
+  - editar um tempo registrado;
+  - botão "Terminar treino" no fim da lista;
+  - menu ⋮ do treino (Renomear, Duplicar, Apagar);
+  - "Já tenho um backup" no primeiro uso.
+- **Traço nas faixas.** Mantive o "–" nas faixas numéricas ("8–12"), como o design usa. Fora delas,
+  não há "·" nem travessão nas telas.
+- **Fim do descanso no emulador.** O heads-up não saiu laranja: o `setColorized` foi ignorado. O
+  código continua pedindo cor e falta conferir na One UI.
+
+### O que ficou faltando
+
+- Tudo que só o S23 valida (item 6 acima).
+- Teste com um backup real do PWA (item 1 acima).
+- Fase 5: o APK release assinado. Falta criar a keystore e o `keystore.properties`, como no zazen.
+  Depois, instalar no celular da irmã.
+- Fase 6: a troca nos dois celulares.
+- Detalhes conhecidos:
+  - a barra da notificação enche em linha reta pelo total de séries, não por exercício;
+  - um exercício repetido no mesmo treino mostra as mesmas séries nos dois itens;
+  - não há compartilhar (`ACTION_SEND`) no Backup, porque o design não mostra.
+
+---
+
 Plano: `../docs/native-plan.md`. Design (cópia local das telas): `design/*.dc.html`, baixado de
 https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`design/canvas.json` tem a ordem).
 
@@ -48,6 +135,13 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   `ui/today/RestPlan.kt` (testes em `RestPlanTest`). No AVD: alarme com a tela apagada disparou 10 ms
   depois do agendado; "Registrar série" na cortina com o processo morto gravou a série no Room e
   começou o descanso seguinte; −15s, +15s e Pular da cortina e do app ficam em sincronia.
+- [x] Polimento e teste de ponta a ponta (26 nov), no AVD "Treino" com `pm clear`: primeiro uso →
+  "Já tenho um backup" (sem Exportar) → backup format 2 de 70 dias → Hoje → 2 séries → descanso →
+  segundo plano, tela apagada e Doze forçado: alarme 27 ms depois do agendado (`SPIKE.md`) →
+  "Registrar série" na cortina gravou a série 3 → resumo → Evolução com 26 nov → export format 3 (71
+  dias) puxado e conferido → reimportado com um descanso correndo: descanso, alarme e notificações
+  sumiram. Sem crash no `logcat -b crash`. `:domain:test :app:testDebugUnitTest :app:assembleDebug
+  :app:assembleRelease` passam (release sem assinatura).
 
 ## Decisões tomadas sozinho
 
@@ -246,6 +340,23 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   - `PrimaryButton` ganhou `fontSize`, `iconSize` e `iconStroke` opcionais; `TextInput`,
     `keyboardActions`. `OnboardingScreen` mudou para `ui/profile/` sem mudar o layout (já batia com o
     design); `Screens.kt` ficou só com `SubScreenHeader`.
+
+- Polimento (26 nov):
+  - Cabeçalho do treino: a geometria segue o protótipo (conteúdo em 162, anda 180), mas o fundo chega
+    a 0,94 na metade da rolagem (`0,94 × early`) em vez de no fim. No protótipo o conteúdo são cartões
+    vazios quase da cor do fundo, então 47% a 50% parece opaco; com texto de verdade a lista ficava
+    legível por trás das linhas.
+  - A lista do treino tem altura mínima de tela + 180 dp, para um treino curto também recolher o
+    cabeçalho. `TabBarDefaults.contentClearance()` substitui os 104 dp fixos: cresce com a barra de 3
+    botões (conferido no AVD). Perfil não tem barra de abas; já termina acima da barra do sistema.
+  - Importar (`replaceAll`) chama `WorkoutTimer.resetForImport`: `RestTimer.skip` e tira as
+    notificações de descanso, de fim e entre séries. Se o arquivo tiver um treino de hoje em
+    andamento, o coletor posta a notificação de novo com os dados novos.
+  - `BackupRoute(firstUse)`: aberto pelo primeiro uso, o Backup não mostra Exportar.
+  - Texto: faixas numéricas ficam com o traço de faixa ("8–12", "30–40 min"), como no design aprovado.
+    Os "–" usados como valor vazio viraram vazio (células de série) ou "-" (blocos de número). Nas
+    notas do programa de exemplo (cópia do PWA, só semente) saíram o travessão, o RIR e a dica de
+    progressão; o `src/program.json` do PWA não mudou.
 
 ## Próximo passo
 

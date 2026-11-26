@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -99,16 +101,19 @@ fun WorkoutScreen(
     val statusOffset = status - HeaderScroll.DESIGN_STATUS_DP.dp
     val ime = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
 
-    Box(Modifier.fillMaxSize()) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
         Column(
             Modifier
                 .fillMaxSize()
                 .verticalScroll(scroll)
+                // A short workout still scrolls the whole collapse distance, so the header can
+                // collapse; the room left over stays under "Terminar treino".
+                .heightIn(min = maxHeight + HeaderScroll.COLLAPSE_DP.dp)
                 .padding(
                     start = 14.dp,
                     end = 14.dp,
                     top = statusOffset + HeaderScroll.CONTENT_TOP_DP.dp,
-                    bottom = maxOf(TabBarDefaults.bottomOffset() + TabBarDefaults.Height + 18.dp + bottomExtra, ime + 12.dp),
+                    bottom = maxOf(TabBarDefaults.contentClearance() + bottomExtra, ime + 12.dp),
                 ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
@@ -276,8 +281,8 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
                         TableRow(Modifier.alpha(0.55f)) {
                             SetNumber(position, accent = false)
                             LastText(last)
-                            Cell(prefill?.let { PtBr.number(it.weightKg) } ?: "–", Modifier.width(72.dp))
-                            Cell(prefill?.let { "${it.reps}" } ?: "–", Modifier.width(60.dp))
+                            Cell(prefill?.let { PtBr.number(it.weightKg) }.orEmpty(), Modifier.width(72.dp))
+                            Cell(prefill?.let { "${it.reps}" }.orEmpty(), Modifier.width(60.dp))
                             Box(Modifier.width(36.dp), contentAlignment = Alignment.CenterStart) {
                                 Box(Modifier.size(28.dp).border(2.dp, TreinoColors.SurfaceHigh, CircleShape))
                             }
