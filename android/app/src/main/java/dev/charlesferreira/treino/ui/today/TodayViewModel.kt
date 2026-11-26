@@ -36,6 +36,10 @@ sealed interface TodaySheet {
     data object Note : TodaySheet
     data class EditSet(val setId: String) : TodaySheet
     data class EditTime(val timeId: String) : TodaySheet
+
+    /** "Começar outro treino": the switch sheet, but picking reopens the ended day. */
+    data object StartAnother : TodaySheet
+    data object ConfirmDelete : TodaySheet
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -277,6 +281,27 @@ class TodayViewModel(
     fun deleteTime(id: String) {
         _sheet.value = null
         viewModelScope.launch { repository.deleteTime(id) }
+    }
+
+    /** "Começar outro treino" after the end: the day goes on with [workoutId] (see [TreinoRepository.reopenSession]). */
+    fun startAnother(workoutId: String) {
+        _sheet.value = null
+        selectedItemId.value = null
+        setEdits.value = emptyMap()
+        timeEdits.value = emptyMap()
+        viewModelScope.launch { repository.reopenSession(date, workoutId) }
+    }
+
+    /** "Apagar treino de hoje": the rest and its notifications stop, then the day is deleted. */
+    fun deleteDay() {
+        _sheet.value = null
+        selectedItemId.value = null
+        setEdits.value = emptyMap()
+        timeEdits.value = emptyMap()
+        viewModelScope.launch {
+            workoutTimer.resetForDeletedDay()
+            repository.deleteDay(date)
+        }
     }
 
     /** "Terminar treino": sets the end, then [then] opens the summary. */

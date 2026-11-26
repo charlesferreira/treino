@@ -8,6 +8,7 @@ import dev.charlesferreira.treino.domain.SetEntry
 import dev.charlesferreira.treino.ui.workouts.ItemDraft
 import dev.charlesferreira.treino.ui.workouts.firstItemOf
 import dev.charlesferreira.treino.domain.TimeEntry
+import dev.charlesferreira.treino.workout.WorkoutTimer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -49,7 +50,11 @@ class EvolutionViewModel(private val repository: TreinoRepository) : ViewModel()
 
 /** "Dia do histórico": the day's log, and the edits of "Editar" (sets, times and the note). */
 @OptIn(ExperimentalCoroutinesApi::class)
-class HistoryDayViewModel(private val repository: TreinoRepository, val date: String) : ViewModel() {
+class HistoryDayViewModel(
+    private val repository: TreinoRepository,
+    val date: String,
+    private val workoutTimer: WorkoutTimer? = null,
+) : ViewModel() {
     private val session = repository.observeSession(date)
     private val sessionId = session.map { it?.id }.distinctUntilChanged()
     private val sets = sessionId.flatMapLatest { id -> if (id == null) flowOf(emptyList()) else repository.observeSets(id) }
@@ -87,6 +92,15 @@ class HistoryDayViewModel(private val repository: TreinoRepository, val date: St
 
     fun saveNote(note: String) {
         viewModelScope.launch { repository.setNote(date, note) }
+    }
+
+    /** "Apagar dia". Today's day also stops the rest and its notifications, as Hoje does. */
+    fun deleteDay(then: () -> Unit) {
+        viewModelScope.launch {
+            if (date == repository.today()) workoutTimer?.resetForDeletedDay()
+            repository.deleteDay(date)
+            then()
+        }
     }
 }
 

@@ -116,13 +116,18 @@ class WorkoutTimer(private val app: Context, private val repository: TreinoRepos
      * between-sets notification belong to the old data, so they all go. [refreshNotification]
      * (the watcher) posts a new one if the imported data has a workout in progress today.
      */
-    fun resetForImport() {
+    fun resetForImport() = reset("an import")
+
+    /** Before today's session is deleted ("Apagar treino"): the same as [resetForImport]. */
+    fun resetForDeletedDay() = reset("a deleted day")
+
+    private fun reset(reason: String) {
         RestTimer.skip(app)
         val notifications = RestNotifications(app)
         notifications.cancelOngoing()
         notifications.cancelDone()
         notifications.cancelWorkout()
-        Log.i(RestLog.TAG, "timer reset for an import")
+        Log.i(RestLog.TAG, "timer reset for $reason")
     }
 
     /** Refreshes the notification on every change of the log, the workouts or the rest, while the process lives. */

@@ -171,6 +171,24 @@ class TreinoRepository(
         ensureSession(date).copy(endedAt = at).also { sessions.upsert(it.toEntity()) }
     }
 
+    /**
+     * "Começar outro treino" after the day's workout ended: the same session goes on with
+     * [workoutId]. Its sets stay, the end is cleared, and the start stays the first one.
+     */
+    suspend fun reopenSession(date: String, workoutId: String, at: Long = now()): Session = db.withTransaction {
+        val s = ensureSession(date)
+        s.copy(workoutId = workoutId, startedAt = s.startedAt ?: at, endedAt = null).also { sessions.upsert(it.toEntity()) }
+    }
+
+    /** "Apagar treino": the day's session with its sets, times and note. Cannot be undone. */
+    suspend fun deleteDay(date: String) = db.withTransaction {
+        sessions.idsByDate(date).forEach { id ->
+            entries.deleteSetsOfSession(id)
+            entries.deleteTimesOfSession(id)
+            sessions.delete(id)
+        }
+    }
+
     /** "Trocar treino" for the day. */
     suspend fun chooseWorkout(date: String, workoutId: String): Session = db.withTransaction {
         ensureSession(date).copy(workoutId = workoutId).also { sessions.upsert(it.toEntity()) }

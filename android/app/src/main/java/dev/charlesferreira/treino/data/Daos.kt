@@ -146,6 +146,12 @@ interface SessionDao {
     )
     fun observeDays(): Flow<List<DayRow>>
 
+    @Query("SELECT id FROM session WHERE date = :date")
+    suspend fun idsByDate(date: String): List<String>
+
+    @Query("DELETE FROM session WHERE id = :id")
+    suspend fun delete(id: String)
+
     @Query("DELETE FROM session")
     suspend fun deleteAll()
 }
@@ -181,6 +187,9 @@ interface EntryDao {
 
     @Query("DELETE FROM set_entry WHERE id = :id")
     suspend fun deleteSet(id: String)
+
+    @Query("DELETE FROM set_entry WHERE session_id = :sessionId")
+    suspend fun deleteSetsOfSession(sessionId: String)
 
     @Query("DELETE FROM set_entry")
     suspend fun deleteAllSets()
@@ -219,6 +228,9 @@ interface EntryDao {
 
     @Query("DELETE FROM time_entry WHERE id = :id")
     suspend fun deleteTime(id: String)
+
+    @Query("DELETE FROM time_entry WHERE session_id = :sessionId")
+    suspend fun deleteTimesOfSession(sessionId: String)
 
     @Query("DELETE FROM time_entry")
     suspend fun deleteAllTimes()

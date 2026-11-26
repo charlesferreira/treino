@@ -55,7 +55,9 @@ import dev.charlesferreira.treino.ui.theme.TreinoFonts
 import dev.charlesferreira.treino.ui.theme.TreinoType
 import dev.charlesferreira.treino.ui.today.EditSetSheet
 import dev.charlesferreira.treino.ui.today.EditTimeSheet
+import dev.charlesferreira.treino.ui.today.DeleteDaySheet
 import dev.charlesferreira.treino.ui.today.NoteSheet
+import dev.charlesferreira.treino.ui.workouts.DangerColor
 
 /**
  * `hist-day`: one day of the log. The workout, its duration, series and volume, the note, and
@@ -65,12 +67,13 @@ import dev.charlesferreira.treino.ui.today.NoteSheet
 @Composable
 fun HistoryDayScreen(date: String, onBack: () -> Unit) {
     val container = appContainer()
-    val vm = viewModel(key = "history-$date") { HistoryDayViewModel(container.repository, date) }
+    val vm = viewModel(key = "history-$date") { HistoryDayViewModel(container.repository, date, container.workoutTimer) }
     val state by vm.state.collectAsStateWithLifecycle()
     var editing by rememberSaveable { mutableStateOf(false) }
     var editSet by rememberSaveable { mutableStateOf<String?>(null) }
     var editTime by rememberSaveable { mutableStateOf<String?>(null) }
     var noteOpen by rememberSaveable { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
     val nav = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val ui = state
 
@@ -162,6 +165,8 @@ fun HistoryDayScreen(date: String, onBack: () -> Unit) {
                 }
             }
         }
+        // Not in the design: the smallest fit, while editing.
+        if (editing) GhostButton("Apagar dia", onClick = { confirmDelete = true }, contentColor = DangerColor)
     }
 
     val sets: List<SetEntry> = ui?.exercises?.flatMap { it.sets }.orEmpty()
@@ -200,6 +205,17 @@ fun HistoryDayScreen(date: String, onBack: () -> Unit) {
                 onDismiss = { editTime = null },
             )
         }
+    }
+    if (confirmDelete) {
+        DeleteDaySheet(
+            title = "Apagar este dia?",
+            action = "Apagar dia",
+            onConfirm = {
+                confirmDelete = false
+                vm.deleteDay(onBack)
+            },
+            onDismiss = { confirmDelete = false },
+        )
     }
     if (noteOpen) {
         NoteSheet(

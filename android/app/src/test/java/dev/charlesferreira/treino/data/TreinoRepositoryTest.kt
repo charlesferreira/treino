@@ -136,6 +136,49 @@ class TreinoRepositoryTest {
     }
 
     @Test
+    fun `delete the day - session, sets, times and note go, other days stay`() = runBlocking<Unit> {
+        val supino = exercise("Supino reto")
+        val corrida = repo.createExercise("Corrida", kind = ExerciseKind.TIME)
+        val yesterday = repo.logSet("2026-11-25", supino.id, 20.0, 10)
+        repo.startSession(today)
+        val set = repo.logSet(today, supino.id, 22.0, 10)
+        repo.logTime(today, corrida.id, 20.0)
+        repo.setNote(today, "Nota")
+        repo.finishSession(today)
+
+        repo.deleteDay(today)
+        assertNull(repo.observeSession(today).first())
+        assertTrue(repo.observeSets(set.sessionId).first().isEmpty())
+        assertTrue(repo.observeTimes(set.sessionId).first().isEmpty())
+        assertEquals(listOf("2026-11-25"), repo.observeDays().first().map { it.session.date })
+        assertEquals(listOf(yesterday.id), repo.observeAllSets().first().map { it.id })
+        assertTrue(repo.observeAllTimes().first().isEmpty())
+
+        // The day starts over: a new session, nothing started.
+        val again = repo.logSet(today, supino.id, 22.0, 8)
+        assertEquals(0, again.position)
+        assertNull(repo.observeSession(today).first()!!.startedAt)
+    }
+
+    @Test
+    fun `start another workout - the day goes on with it, sets kept, end cleared`() = runBlocking<Unit> {
+        val a = repo.createWorkout("Superior A")
+        val b = repo.createWorkout("Inferior A")
+        val ex = exercise("Rosca martelo")
+        repo.startSession(today, at = 10L)
+        repo.logSet(today, ex.id, 14.0, 12)
+        repo.finishSession(today, at = 20L)
+        assertEquals(a.id, repo.observeSession(today).first()!!.workoutId)
+
+        val s = repo.reopenSession(today, b.id, at = 30L)
+        assertEquals(b.id, s.workoutId)
+        assertEquals(10L, s.startedAt)
+        assertNull(s.endedAt)
+        assertEquals(1, repo.observeSets(s.id).first().size)
+        assertEquals(b.id, repo.observeWorkoutFor(today).first()!!.id)
+    }
+
+    @Test
     fun `today's workout follows the rotation and the manual choice`() = runBlocking<Unit> {
         val a = repo.createWorkout("Superior A")
         val b = repo.createWorkout("Inferior A")

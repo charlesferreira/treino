@@ -85,6 +85,8 @@ fun TodayScreen(
                 override fun onLogTime(item: ItemUi, draft: TimeDraft) = vm.onTimeLogged(item, draft)
                 override fun onEditLoggedTime(id: String) = vm.openSheet(TodaySheet.EditTime(id))
                 override fun onFinish() = vm.finish { onSummary(vm.date) }
+                override fun onStartAnother() = vm.openSheet(TodaySheet.StartAnother)
+                override fun onDelete() = vm.openSheet(TodaySheet.ConfirmDelete)
             }
         }
         WorkoutScreen(
@@ -121,6 +123,21 @@ fun TodayScreen(
                 vm.closeSheet()
                 onManageWorkouts()
             },
+            onDismiss = vm::closeSheet,
+        )
+        TodaySheet.StartAnother -> SwitchWorkoutSheet(
+            options = ui.switchOptions,
+            onChoose = vm::startAnother,
+            onManage = {
+                vm.closeSheet()
+                onManageWorkouts()
+            },
+            onDismiss = vm::closeSheet,
+        )
+        TodaySheet.ConfirmDelete -> DeleteDaySheet(
+            title = "Apagar o treino de hoje?",
+            action = "Apagar treino",
+            onConfirm = vm::deleteDay,
             onDismiss = vm::closeSheet,
         )
         TodaySheet.Note -> NoteSheet(ui.session?.note, onSave = vm::saveNote, onDismiss = vm::closeSheet)

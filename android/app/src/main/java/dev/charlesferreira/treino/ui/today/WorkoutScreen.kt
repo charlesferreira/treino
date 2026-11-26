@@ -61,6 +61,7 @@ import dev.charlesferreira.treino.ui.components.TreinoIcons
 import dev.charlesferreira.treino.ui.nav.TabBarDefaults
 import dev.charlesferreira.treino.ui.theme.TreinoColors
 import dev.charlesferreira.treino.ui.theme.TreinoType
+import dev.charlesferreira.treino.ui.workouts.DangerColor
 
 /** What the workout screen does; the ViewModel implements it. */
 interface WorkoutActions {
@@ -77,6 +78,8 @@ interface WorkoutActions {
     fun onLogTime(item: ItemUi, draft: TimeDraft)
     fun onEditLoggedTime(id: String)
     fun onFinish()
+    fun onStartAnother()
+    fun onDelete()
 }
 
 /**
@@ -156,6 +159,9 @@ fun WorkoutScreen(
                 current == null -> PrimaryButton("Terminar treino", onClick = actions::onFinish, icon = TreinoIcons.Check)
                 else -> GhostButton("Terminar treino", onClick = actions::onFinish)
             }
+            // Not in the design: the smallest fit, at the end of the list.
+            if (ui.ended) GhostButton("Começar outro treino", onClick = actions::onStartAnother)
+            GhostButton("Apagar treino de hoje", onClick = actions::onDelete, contentColor = DangerColor)
         }
         WorkoutHeader(
             v = v,
