@@ -3,7 +3,10 @@ package dev.charlesferreira.treino.ui.evolution
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.charlesferreira.treino.data.TreinoRepository
+import dev.charlesferreira.treino.domain.Exercise
 import dev.charlesferreira.treino.domain.SetEntry
+import dev.charlesferreira.treino.ui.workouts.ItemDraft
+import dev.charlesferreira.treino.ui.workouts.firstItemOf
 import dev.charlesferreira.treino.domain.TimeEntry
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
@@ -87,10 +90,23 @@ class HistoryDayViewModel(private val repository: TreinoRepository, val date: St
     }
 }
 
-class ExerciseProgressViewModel(repository: TreinoRepository, exerciseId: String) : ViewModel() {
+class ExerciseProgressViewModel(private val repository: TreinoRepository, exerciseId: String) : ViewModel() {
     val state: StateFlow<ProgressUi?> = combine(
         repository.observeExercise(exerciseId),
         repository.observeExerciseHistory(exerciseId),
     ) { exercise, days -> exercise?.let { buildProgress(it, days) } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    /** The equipment sheet's "Prescrição": the exercise in the first workout of the rotation that has it. */
+    val prescription: StateFlow<List<Pair<String, String>>?> = combine(
+        repository.observeExercise(exerciseId),
+        repository.observeWorkouts(),
+        repository.observeAllItems(),
+    ) { exercise, workouts, items ->
+        firstItemOf(exerciseId, workouts, items)?.let { ItemDraft.of(it, exercise).prescription() }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+
+    fun saveExercise(exercise: Exercise) {
+        viewModelScope.launch { repository.updateExercise(exercise) }
+    }
 }

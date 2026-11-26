@@ -29,7 +29,14 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     lista com mini-gráfico) e Progressão do exercício (gráfico em Canvas com Carga máx, Volume e
     Melhor série). Estado puro testado em `EvolutionStateTest` e escala do gráfico em
     `ChartMathTest`. Conferido no AVD "Treino" contra o PNG de cada design.
-  - [ ] Treinos, Perfil
+  - [x] Treinos (`ui/workouts/`): sequência com "próximo" e arrastar para reordenar, criar treino,
+    editar treino (itens, reordenar, adicionar, renomear, duplicar, apagar), exercício no treino
+    (folha), adicionar exercício (busca com sinônimos e sem acento, grupos do PWA, criar), "Todos os
+    exercícios" e a folha de equipamento, aberta do item, da lista e do selo da Progressão. Estado
+    puro em `WorkoutsStateTest` e `ExerciseSearchTest`; Room em `WorkoutsRepositoryTest`. Conferido no
+    AVD "Treino" contra o PNG de cada design, e no Hoje: "KG/HALTER", passo ±2 e ±2,5 e o treino
+    sugerido seguindo a nova ordem.
+  - [ ] Perfil
 - [x] Fase 4: timer de verdade. `workout/WorkoutTimer.kt` liga o Room ao timer; regras puras em
   `ui/today/RestPlan.kt` (testes em `RestPlanTest`). No AVD: alarme com a tela apagada disparou 10 ms
   depois do agendado; "Registrar série" na cortina com o processo morto gravou a série no Room e
@@ -172,8 +179,39 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     atrás. A última sessão do Superior B e a corrida de 6 dias atrás continuam como antes, então o
     Hoje segue sugerindo o Superior B. `logSet`/`logTime` aceitam `loggedAt` nulo para isso.
 
+- Fase 3, Treinos:
+  - Reordenar arrastando a alça (sem biblioteca, `ui/workouts/Reorderable.kt`): a linha segue o dedo,
+    as outras abrem espaço e a nova ordem aparece na hora, antes do Room responder. TalkBack ganha
+    "Mover para cima/baixo" em cada linha. As listas são curtas, então é uma `Column`, não lazy.
+  - "próximo" (`WorkoutSequence.upcoming`): o que o Hoje mostra enquanto hoje não tem registro;
+    depois do primeiro registro de hoje, o seguinte na sequência.
+  - Exercício no treino e equipamento são folhas, não rotas: saíram `WorkoutItemEditRoute` e
+    `ExerciseEditRoute`. `ExercisePickerRoute(workoutId = null)` é "Todos os exercícios" (título
+    "Exercícios", cada linha com o equipamento; tocar abre a folha de equipamento).
+  - O tipo (Carga × reps / Tempo) mora no exercício: trocar no item grava o exercício. A folha guarda
+    as duas faixas (reps e minutos) e só grava a do tipo escolhido. Faixa: um campo só vale para os
+    dois lados, invertida é trocada, reps inteiras de 1 a 999, minutos com vírgula até 600; inválida
+    deixa a borda vermelha e o Salvar apagado. Notas do item ficam num campo abaixo do descanso (o
+    design não mostra). Descanso de 15 em 15 s, 0 = "sem". "Remover do treino" remove sem perguntar
+    (o item não tem histórico).
+  - Item novo pelo seletor: 3 × 8–12 com 2:00, ou 1 × 20–30 min sem descanso (o `defaultItem` do
+    PWA); volta para o treino com a folha do item aberta. "Criar “…”" cria em "Meus exercícios", de
+    carga, com o equipamento deduzido do nome.
+  - "cerca de N min": 1 min por série mais o descanso dela, 1 min por exercício, o meio da faixa nos
+    de tempo; arredondado a 5.
+  - Folha de equipamento: o design (`dumbbell-equipment`) é da direção A (verde, Barlow); foi
+    redesenhada com as cores e fontes da B, mesmo layout e textos. O quadro "Máquina, para comparar"
+    virou o campo "Peso da placa" (±0,5 kg), que só aparece na máquina, onde o passo ganha a opção
+    "1 placa" (padrão). "Volume conta 2 halteres" só aparece em halteres (ligado ao escolher
+    halteres). Escolher o passo padrão do equipamento grava nulo. Prescrição: a do item de onde
+    veio; na Progressão, a do primeiro treino da sequência que tem o exercício; na lista, nada.
+    Salvar a partir do item grava o exercício e o rascunho do item; o X volta para o item.
+  - Na Progressão o selo de equipamento abre a folha; sem equipamento ("outro") aparece "Equipamento".
+  - Apagar treino pede confirmação numa folha ("Os dias em que ele foi feito continuam no
+    histórico."); duplicar cria "<nome> (cópia)" logo depois do original e abre a cópia.
+
 ## Próximo passo
 
-Treinos e Perfil (Fase 3); a Fase 2 (tela de backup) continua pendente. Na Evolução, falta ver
+Perfil (Fase 3); a Fase 2 (tela de backup) continua pendente. Na Evolução, falta ver
 com um backup real do PWA (muitos meses de dias importados). A Fase 4 ainda
 precisa do S23 (`SPIKE.md`, "Para testar no S23", itens 9 a 11).

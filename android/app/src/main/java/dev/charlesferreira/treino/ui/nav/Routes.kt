@@ -21,11 +21,11 @@ import kotlinx.serialization.Serializable
 @Serializable data class HistoryDayRoute(val date: String)
 @Serializable data class ExerciseProgressRoute(val exerciseId: String)
 
-// Treinos
+// Treinos (the item and the equipment are sheets, not routes)
 @Serializable data class WorkoutEditRoute(val workoutId: String)
-@Serializable data class WorkoutItemEditRoute(val itemId: String)
-@Serializable data class ExercisePickerRoute(val workoutId: String)
-@Serializable data class ExerciseEditRoute(val exerciseId: String)
+
+/** "Adicionar exercício" to [workoutId]; null is "Todos os exercícios". */
+@Serializable data class ExercisePickerRoute(val workoutId: String? = null)
 
 // Perfil
 @Serializable data object BackupRoute

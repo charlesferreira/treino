@@ -54,4 +54,21 @@ object WorkoutSequence {
         times: List<TimeEntry>,
         date: String,
     ): Workout? = suggestWorkout(workouts, sessions, executedSessionIds(sets, times), date)
+
+    /**
+     * O "próximo" da tela Treinos: o treino que ainda falta fazer. Enquanto hoje não tem registro,
+     * é o que o Hoje mostra ([suggestWorkout]); depois do primeiro registro de hoje, é o seguinte
+     * ao de hoje na sequência.
+     */
+    fun upcoming(
+        workouts: List<Workout>,
+        sessions: List<Session>,
+        executed: Set<String>,
+        today: String,
+    ): Workout? {
+        val doneToday = sessions.any { it.date == today && it.id in executed }
+        if (!doneToday) return suggestWorkout(workouts, sessions, executed, today)
+        val tomorrow = java.time.LocalDate.parse(today).plusDays(1).toString()
+        return nextInSequence(workouts, sessions, executed, tomorrow)
+    }
 }

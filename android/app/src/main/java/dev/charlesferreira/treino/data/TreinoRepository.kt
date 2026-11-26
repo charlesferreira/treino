@@ -86,6 +86,15 @@ class TreinoRepository(
         WorkoutSequence.nextInSequence(ws, ss.map { it.toDomain() }, executed.toSet(), date)
     }.distinctUntilChanged()
 
+    /** "próximo" in Treinos: what is still to be done (see [WorkoutSequence.upcoming]). */
+    fun observeUpcomingWorkout(): Flow<Workout?> = combine(
+        observeWorkouts(),
+        sessions.observeAll(),
+        entries.observeExecutedSessionIds(),
+    ) { ws, ss, executed ->
+        WorkoutSequence.upcoming(ws, ss.map { it.toDomain() }, executed.toSet(), today())
+    }.distinctUntilChanged()
+
     fun observeSession(date: String = today()): Flow<Session?> = sessions.observeByDate(date).map { it?.toDomain() }
 
     fun observeSets(sessionId: String): Flow<List<SetEntry>> =
@@ -244,6 +253,20 @@ class TreinoRepository(
     suspend fun deleteWorkout(id: String) = db.withTransaction {
         workouts.deleteWorkout(id)
         workouts.getWorkouts().forEachIndexed { i, w -> if (w.position != i) workouts.setWorkoutPosition(w.id, i) }
+    }
+
+    /** A copy right after the original, "<name> (cópia)", with copies of its items. */
+    suspend fun duplicateWorkout(id: String): Workout? = db.withTransaction {
+        val all = workouts.getWorkouts()
+        val original = all.firstOrNull { it.id == id }?.toDomain() ?: return@withTransaction null
+        val copy = Workout(id = Ids.random(), name = "${original.name} (cópia)", position = all.size)
+        workouts.upsertWorkout(copy.toEntity())
+        workouts.getItems(id).forEach { item ->
+            workouts.upsertItem(item.toDomain().copy(id = Ids.random(), workoutId = copy.id).toEntity())
+        }
+        val order = all.map { it.id }.toMutableList().apply { add(indexOf(id) + 1, copy.id) }
+        order.forEachIndexed { i, wid -> workouts.setWorkoutPosition(wid, i) }
+        copy.copy(position = order.indexOf(copy.id))
     }
 
     /** The rotation in the new order. Ids not listed keep their relative order after the listed ones. */

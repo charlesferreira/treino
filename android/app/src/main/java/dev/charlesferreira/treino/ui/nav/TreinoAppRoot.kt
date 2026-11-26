@@ -37,7 +37,9 @@ import dev.charlesferreira.treino.ui.screens.PlaceholderScreen
 import dev.charlesferreira.treino.ui.screens.ProfileScreen
 import dev.charlesferreira.treino.ui.screens.RootViewModel
 import dev.charlesferreira.treino.ui.screens.SubScreenHeader
-import dev.charlesferreira.treino.ui.screens.WorkoutsScreen
+import dev.charlesferreira.treino.ui.workouts.ExercisePickerScreen
+import dev.charlesferreira.treino.ui.workouts.WorkoutEditScreen
+import dev.charlesferreira.treino.ui.workouts.WorkoutsScreen
 import dev.charlesferreira.treino.ui.today.SummaryScreen
 import dev.charlesferreira.treino.ui.today.TodayScreen
 import androidx.compose.runtime.CompositionLocalProvider
@@ -108,7 +110,13 @@ private fun TreinoNavHost(start: Any) {
                     onExercise = { id -> nav.navigate(ExerciseProgressRoute(id)) { launchSingleTop = true } },
                 )
             }
-            composable<WorkoutsRoute> { WorkoutsScreen(onProfile = profile) }
+            composable<WorkoutsRoute> {
+                WorkoutsScreen(
+                    onProfile = profile,
+                    onWorkout = { id -> nav.navigate(WorkoutEditRoute(id)) { launchSingleTop = true } },
+                    onExercises = { nav.navigate(ExercisePickerRoute(null)) { launchSingleTop = true } },
+                )
+            }
             composable<ProfileRoute> {
                 ProfileScreen(
                     onBack = back,
@@ -121,10 +129,31 @@ private fun TreinoNavHost(start: Any) {
             composable<SummaryRoute> { SummaryScreen(it.toRoute<SummaryRoute>().date, onClose = back) }
             composable<HistoryDayRoute> { HistoryDayScreen(it.toRoute<HistoryDayRoute>().date, onBack = back) }
             composable<ExerciseProgressRoute> { ExerciseProgressScreen(it.toRoute<ExerciseProgressRoute>().exerciseId, onBack = back) }
-            composable<WorkoutEditRoute> { PlaceholderScreen("Editar treino", back) }
-            composable<WorkoutItemEditRoute> { PlaceholderScreen("Exercício no treino", back) }
-            composable<ExercisePickerRoute> { PlaceholderScreen("Adicionar exercício", back) }
-            composable<ExerciseEditRoute> { PlaceholderScreen("Exercício", back) }
+            composable<WorkoutEditRoute> { entry ->
+                val workoutId = entry.toRoute<WorkoutEditRoute>().workoutId
+                // The picker leaves the new item here; its sheet opens on the way back.
+                val openItem by entry.savedStateHandle.getStateFlow<String?>(OPEN_ITEM, null).collectAsStateWithLifecycle()
+                WorkoutEditScreen(
+                    workoutId = workoutId,
+                    openItem = openItem,
+                    onOpenItemShown = { entry.savedStateHandle[OPEN_ITEM] = null },
+                    onBack = back,
+                    onAddExercise = { nav.navigate(ExercisePickerRoute(workoutId)) { launchSingleTop = true } },
+                    onOpenWorkout = { id ->
+                        nav.navigate(WorkoutEditRoute(id)) { popUpTo<WorkoutEditRoute> { inclusive = true } }
+                    },
+                )
+            }
+            composable<ExercisePickerRoute> { entry ->
+                ExercisePickerScreen(
+                    workoutId = entry.toRoute<ExercisePickerRoute>().workoutId,
+                    onBack = back,
+                    onPicked = { itemId ->
+                        nav.previousBackStackEntry?.savedStateHandle?.set(OPEN_ITEM, itemId)
+                        nav.popBackStack()
+                    },
+                )
+            }
             composable<BackupRoute> { PlaceholderScreen("Backup", back) }
             composable<LoadReviewRoute> { PlaceholderScreen("Revisar cargas antigas", back) }
             if (BuildConfig.DEBUG) {
@@ -156,6 +185,8 @@ private fun TreinoNavHost(start: Any) {
     }
     }
 }
+
+private const val OPEN_ITEM = "openItem"
 
 /** Tabs keep their own state: Hoje is the root, the others are saved and restored. */
 private fun NavHostController.selectTab(tab: Tab) {

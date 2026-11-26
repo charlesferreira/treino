@@ -32,11 +32,6 @@ class OnboardingViewModel(private val repository: TreinoRepository) : ViewModel(
     }
 }
 
-class WorkoutsViewModel(repository: TreinoRepository) : ViewModel() {
-    val workouts: StateFlow<List<Workout>> = repository.observeWorkouts()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-}
-
 class ProfileViewModel(private val repository: TreinoRepository) : ViewModel() {
     val settings: StateFlow<Settings> = repository.settings.settings
         .stateIn(viewModelScope, SharingStarted.Eagerly, Settings())

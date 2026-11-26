@@ -28,6 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import dev.charlesferreira.treino.ui.workouts.EquipmentSheet
+import dev.charlesferreira.treino.ui.workouts.equipmentChip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -61,6 +64,8 @@ fun ExerciseProgressScreen(exerciseId: String, onBack: () -> Unit) {
     val vm = viewModel(key = "progress-$exerciseId") { ExerciseProgressViewModel(container.repository, exerciseId) }
     val state by vm.state.collectAsStateWithLifecycle()
     var metric by rememberSaveable { mutableStateOf(Metric.MAX) }
+    var equipment by rememberSaveable { mutableStateOf(false) }
+    val prescription by vm.prescription.collectAsStateWithLifecycle()
     val ui = state
 
     Column(
@@ -87,13 +92,22 @@ fun ExerciseProgressScreen(exerciseId: String, onBack: () -> Unit) {
                 maxLines = 1,
                 modifier = Modifier.weight(1f).padding(start = 6.dp),
             )
-            ui?.equipmentTag?.let { tag ->
+            // The equipment tag opens the equipment sheet; "Equipamento" when there is none.
+            if (ui != null) {
+                val tag = ui.equipmentTag ?: equipmentChip(ui.exercise)
                 val icon = when (ui.exercise.equipment) {
                     Equipment.DUMBBELL, Equipment.BARBELL -> TreinoIcons.Dumbbell
                     Equipment.MACHINE, Equipment.CABLE -> TreinoIcons.Machine
                     else -> null
                 }
-                Tag(tag, icon = icon)
+                Tag(
+                    tag,
+                    icon = icon,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(role = Role.Button) { equipment = true }
+                        .semantics { contentDescription = "Equipamento: $tag" },
+                )
             }
         }
         if (ui == null) return@Column
@@ -161,6 +175,18 @@ fun ExerciseProgressScreen(exerciseId: String, onBack: () -> Unit) {
                 }
             }
         }
+    }
+    val ex = ui?.exercise
+    if (equipment && ex != null) {
+        EquipmentSheet(
+            exercise = ex,
+            prescription = prescription,
+            onSave = {
+                vm.saveExercise(it)
+                equipment = false
+            },
+            onDismiss = { equipment = false },
+        )
     }
 }
 

@@ -95,39 +95,6 @@ fun OnboardingScreen(onCreateWorkout: () -> Unit, onBackup: () -> Unit) {
     }
 }
 
-@Composable
-fun WorkoutsScreen(onProfile: () -> Unit) {
-    val container = appContainer()
-    val vm = viewModel { WorkoutsViewModel(container.repository) }
-    val workouts by vm.workouts.collectAsStateWithLifecycle()
-    TabPlaceholder("Treinos", onProfile) {
-        if (workouts.isNotEmpty()) {
-            SectionLabel("Sequência")
-            Card {
-                workouts.forEachIndexed { i, w ->
-                    CardRow(w.name, divider = i > 0, trailing = { Icon(TreinoIcons.ChevronRight, tint = TreinoColors.TextFaint, size = 18.dp) })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TabPlaceholder(title: String, onProfile: () -> Unit, content: @Composable () -> Unit) {
-    val container = appContainer()
-    val settings by container.settings.settings.collectAsStateWithLifecycle(dev.charlesferreira.treino.data.Settings())
-    Column(
-        Modifier.fillMaxSize().statusBarsPadding().padding(start = 14.dp, end = 14.dp, top = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Row(Modifier.padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            TText(title, style = TreinoType.Title, modifier = Modifier.weight(1f))
-            Avatar(settings.profileName, onClick = onProfile)
-        }
-        content()
-    }
-}
-
 /** Header of the sub screens (`p-profile`): back button and an 18 sp bold title. */
 @Composable
 fun SubScreenHeader(title: String, onBack: () -> Unit) {
