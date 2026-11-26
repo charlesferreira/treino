@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Histórico, direção B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ph{width:390px;height:844px;box-sizing:border-box;background:#101113;color:#F2F0EC;font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;position:relative;overflow:hidden}
+.m{font-family:'JetBrains Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.dim{color:#A8A49D}
+.faint{color:#8A867F}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.card{background:#1A1C20;border-radius:20px;border:1px solid rgba(255,255,255,.06)}
+.lbl{font-size:12px;font-weight:500;color:#A8A49D}
+.tabbar{position:absolute;left:20px;right:20px;bottom:24px;height:62px;box-sizing:border-box;border-radius:31px;background:#1F2125;border:1px solid rgba(255,255,255,.08);display:flex;padding:0 8px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:#8A867F}
+.tab.on{color:#FF7A45}
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wk i{display:block;height:26px;border-radius:7px;background:#24272C}
+.wk i.g{background:#FF7A45}
+.wk i.c{background:none;box-shadow:inset 0 0 0 2px #FF7A45}
+.wk i.t{box-shadow:inset 0 0 0 2px #F2F0EC}
+.facts{display:flex;gap:6px;flex-wrap:wrap}
+.fact{height:26px;padding:0 9px;border-radius:8px;background:#24272C;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#A8A49D}
+.fact b{color:#F2F0EC;font-weight:500;font-family:'JetBrains Mono',monospace}
+.day{padding:14px 16px;display:flex;gap:14px;align-items:flex-start}
+.dc{width:36px;display:flex;flex-direction:column;align-items:center;flex:none}
+</style>
+</helmet>
+<div class="ph" style="padding: 54px 14px 0; display: flex; flex-direction: column; gap: 10px">
+  <div style="display: flex; align-items: center; justify-content: space-between; padding: 0 6px">
+    <h1 style="margin: 0; font-size: 30px; font-weight: 700; letter-spacing: -.02em">Evolução</h1>
+    <div style="width: 40px; height: 40px; border-radius: 50%; background: #24272C; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">CF</div>
+  </div>
+  <div style="display:flex;gap:4px;padding:4px;border-radius:22px;background:#1A1C20;margin:0 6px" role="tablist"><button class="btn" role="tab" style="flex:1;height:36px;border-radius:18px;font-size:14px;font-weight:600;background:#FF7A45;color:#1A0D06">Dias</button><button class="btn" role="tab" style="flex:1;height:36px;border-radius:18px;font-size:14px;font-weight:600;color:#A8A49D">Exercícios</button></div>
+
+  <section class="card" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <span style="font-weight: 700">Novembro</span>
+      <span class="lbl"><span class="m" style="color: #F2F0EC">14</span> treinos</span>
+    </div>
+    <div class="wk lbl" style="text-align: center; font-size: 11px"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+    <div class="wk" aria-hidden="true"><i class="g"></i><i class="g"></i><i class="c"></i><i class="g"></i><i></i><i class="g"></i><i></i></div>
+    <div class="wk" aria-hidden="true"><i class="g"></i><i class="g"></i><i class="c"></i><i class="g"></i><i class="g"></i><i></i><i class="c"></i></div>
+    <div class="wk" aria-hidden="true"><i class="g"></i><i class="g"></i><i class="c"></i><i class="g t"></i><i></i><i></i><i></i></div>
+  </section>
+
+  <section class="card">
+    <div class="day">
+      <div class="dc"><span class="m" style="font-size: 22px; font-weight: 700; line-height: 1.1">26</span><span class="faint" style="font-size: 12px">qui</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-weight: 700; font-size: 16px">Superior B</span>
+        <div class="facts"><span class="fact"><b>16</b> séries</span><span class="fact"><b>58</b> min</span><span class="fact">volume <b>6.840 kg</b></span></div>
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px">
+          <div style="display: flex; justify-content: space-between; font-size: 13px"><span class="dim">Desenvolvimento c/ halteres</span><span class="m">máx 18 kg</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px"><span class="dim">Puxada supinada</span><span class="m">máx 64 kg</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px"><span class="dim">Rosca martelo</span><span class="m" style="color: #FF9A70">↑ máx 16 kg</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="day" style="border-top: 1px solid rgba(255,255,255,.06)">
+      <div class="dc"><span class="m" style="font-size: 22px; font-weight: 700; line-height: 1.1">25</span><span class="faint" style="font-size: 12px">qua</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-weight: 700; font-size: 16px">Corrida Z2</span>
+        <div class="facts"><span class="fact"><b>35</b> min</span><span class="fact"><b>5,2</b> km</span><span class="fact">esteira</span></div>
+      </div>
+    </div>
+    <div class="day" style="border-top: 1px solid rgba(255,255,255,.06)">
+      <div class="dc"><span class="m" style="font-size: 22px; font-weight: 700; line-height: 1.1">24</span><span class="faint" style="font-size: 12px">ter</span></div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-weight: 700; font-size: 16px">Pernas A</span>
+        <div class="facts"><span class="fact"><b>17</b> séries</span><span class="fact"><b>62</b> min</span><span class="fact">volume <b>9.310 kg</b></span></div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabbar" aria-label="Menu"><button class="btn tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>Hoje</button><button class="btn tab on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-4M11 16V8M16 16v-6M21 16V4"/></svg>Evolução</button><button class="btn tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Treinos</button></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

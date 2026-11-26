@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Progressão do exercício, direção B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ph{width:390px;height:844px;box-sizing:border-box;background:#101113;color:#F2F0EC;font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;position:relative;overflow:hidden}
+.m{font-family:'JetBrains Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.dim{color:#A8A49D}
+.faint{color:#8A867F}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.card{background:#1A1C20;border-radius:20px;border:1px solid rgba(255,255,255,.06)}
+.lbl{font-size:12px;font-weight:500;color:#A8A49D}
+.tag{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:8px;background:#24272C;color:#D6D2CB;font-size:12px;font-weight:500;white-space:nowrap}
+.tag .ic{width:14px;height:14px}
+.fil{height:32px;padding:0 12px;border-radius:16px;background:#24272C;font-size:13px;font-weight:600;color:#A8A49D}
+.fil.on{background:#F2F0EC;color:#101113}
+.sr{display:flex;align-items:center;gap:12px;padding:11px 16px}
+.sr + .sr{border-top:1px solid rgba(255,255,255,.06)}
+.tabbar{position:absolute;left:20px;right:20px;bottom:24px;height:62px;box-sizing:border-box;border-radius:31px;background:#1F2125;border:1px solid rgba(255,255,255,.08);display:flex;padding:0 8px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:#8A867F}
+.tab.on{color:#FF7A45}
+</style>
+</helmet>
+<div class="ph" style="padding: 50px 14px 0; display: flex; flex-direction: column; gap: 10px">
+  <header style="display: flex; align-items: center; gap: 6px">
+    <button class="btn" aria-label="Voltar" style="width: 44px; height: 44px; border-radius: 22px; background: #1A1C20; display: flex; align-items: center; justify-content: center"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+    <span style="flex: 1; font-size: 18px; font-weight: 700; padding-left: 6px">Rosca martelo</span>
+    <span class="tag"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>Halteres 2×</span>
+  </header>
+
+  <section class="card" style="padding: 16px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between">
+      <div style="display: flex; flex-direction: column">
+        <span class="lbl">Carga máxima por halter</span>
+        <span class="m" style="font-size: 44px; font-weight: 700; line-height: 1.05">16<span class="faint" style="font-size: 18px"> kg</span></span>
+      </div>
+      <span class="m" style="font-size: 13px; color: #FF9A70; padding-bottom: 6px">+4 kg em 7 sem</span>
+    </div>
+    <div style="display: flex; gap: 6px">
+      <button class="btn fil on">Carga máx</button><button class="btn fil">Volume</button><button class="btn fil">Melhor série</button>
+    </div>
+    <svg viewBox="0 0 326 150" width="326" height="150" role="img" aria-label="Carga máxima por sessão: 12 kg de 8 a 22 out, 14 kg de 29 out a 19 nov, 16 kg em 26 nov">
+      <g stroke="rgba(255,255,255,.06)"><line x1="0" y1="30" x2="326" y2="30"/><line x1="0" y1="65" x2="326" y2="65"/><line x1="0" y1="100" x2="326" y2="100"/><line x1="0" y1="128" x2="326" y2="128"/></g>
+      <g fill="#8A867F" font-family="JetBrains Mono, monospace" font-size="10"><text x="0" y="25">16</text><text x="0" y="60">14</text><text x="0" y="95">12</text></g>
+      <path d="M28 100 L68 100 L108 100 L148 65 L188 65 L228 65 L268 65 L308 30 L308 128 L28 128 Z" fill="rgba(255,122,69,.10)"/>
+      <path d="M28 100 L68 100 L108 100 L148 65 L188 65 L228 65 L268 65 L308 30" fill="none" stroke="#FF7A45" stroke-width="3" stroke-linejoin="round"/>
+      <g fill="#1A1C20" stroke="#FF7A45" stroke-width="2.5"><circle cx="28" cy="100" r="4"/><circle cx="68" cy="100" r="4"/><circle cx="108" cy="100" r="4"/><circle cx="148" cy="65" r="4"/><circle cx="188" cy="65" r="4"/><circle cx="228" cy="65" r="4"/><circle cx="268" cy="65" r="4"/></g>
+      <circle cx="308" cy="30" r="6" fill="#FF7A45"/>
+      <g fill="#8A867F" font-family="JetBrains Mono, monospace" font-size="10" text-anchor="middle"><text x="28" y="145">8 out</text><text x="108" y="145">22 out</text><text x="188" y="145">5 nov</text><text x="268" y="145">19 nov</text></g>
+    </svg>
+  </section>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+    <div class="card" style="padding: 12px 14px; display: flex; flex-direction: column"><span class="lbl">Melhor série</span><span class="m" style="font-size: 18px">16 × 11</span><span class="faint" style="font-size: 11px">26 nov</span></div>
+    <div class="card" style="padding: 12px 14px; display: flex; flex-direction: column"><span class="lbl">Mais reps com 14</span><span class="m" style="font-size: 18px">14 × 12, 12</span><span class="faint" style="font-size: 11px">19 nov</span></div>
+  </div>
+
+  <section class="card">
+    <div class="sr"><span class="m faint" style="width: 52px; font-size: 12px">26 nov</span><span class="m" style="flex: 1; font-size: 14px">16 × 11, 16 × 10</span><span class="m" style="font-size: 14px; color: #FF9A70">↑ 16</span></div>
+    <div class="sr"><span class="m faint" style="width: 52px; font-size: 12px">19 nov</span><span class="m" style="flex: 1; font-size: 14px">14 × 12, 14 × 12</span><span class="m dim" style="font-size: 14px">14</span></div>
+    <div class="sr"><span class="m faint" style="width: 52px; font-size: 12px">12 nov</span><span class="m" style="flex: 1; font-size: 14px">14 × 12, 14 × 11</span><span class="m dim" style="font-size: 14px">14</span></div>
+  </section>
+
+  <nav class="tabbar" aria-label="Menu"><button class="btn tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>Hoje</button><button class="btn tab on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-4M11 16V8M16 16v-6M21 16V4"/></svg>Evolução</button><button class="btn tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Treinos</button></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

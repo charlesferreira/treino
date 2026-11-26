@@ -1,0 +1,393 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-11-25T15:30:00Z"
+  },
+  "title": "Treino redesign",
+  "launch": {
+    "view": "canvas",
+    "page": "telas"
+  },
+  "pages": [
+    {
+      "id": "telas",
+      "name": "Telas por aba"
+    },
+    {
+      "id": "volt",
+      "name": "Arquivo"
+    }
+  ],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "A1 Treino em andamento",
+      "page": "volt"
+    },
+    "a-rest.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "A2 Descanso expandido",
+      "page": "volt"
+    },
+    "a-rest-pill.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "A3 Rolou: cabeçalho e pílula",
+      "page": "volt"
+    },
+    "a-rest-done.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "A4 Fim do descanso",
+      "page": "volt"
+    },
+    "a-summary.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "A5 Resumo do treino",
+      "page": "volt"
+    },
+    "a-history.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "A6 Histórico",
+      "page": "volt"
+    },
+    "a-exercise.dc.html": {
+      "x": 2820,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "A7 Progressão do exercício",
+      "page": "volt"
+    },
+    "ios-lock.dc.html": {
+      "x": 3290,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "iPhone: Live Activity (fora do plano)",
+      "page": "volt"
+    },
+    "h-start.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Antes de começar",
+      "page": "telas"
+    },
+    "h-switch.dc.html": {
+      "x": 470,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Trocar o treino",
+      "page": "telas"
+    },
+    "b-workout.dc.html": {
+      "x": 940,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "B1 Treino em andamento",
+      "page": "telas"
+    },
+    "b-header-scroll.dc.html": {
+      "x": 1410,
+      "y": 0,
+      "w": 390,
+      "h": 640,
+      "title": "Cabeçalho encolhendo com a rolagem",
+      "page": "telas",
+      "is_interactive": true
+    },
+    "h-edit-set.dc.html": {
+      "x": 1880,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Editar série registrada",
+      "page": "telas"
+    },
+    "b-rest.dc.html": {
+      "x": 2350,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "B2 Descanso expandido",
+      "page": "telas"
+    },
+    "b-rest-pill.dc.html": {
+      "x": 2820,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "B3 Rolou: cabeçalho e pílula",
+      "page": "telas"
+    },
+    "b-rest-done.dc.html": {
+      "x": 3290,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "B4 Fim do descanso",
+      "page": "telas"
+    },
+    "h-time.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Exercício de tempo",
+      "page": "telas"
+    },
+    "b-summary.dc.html": {
+      "x": 4230,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "B5 Resumo do treino",
+      "page": "telas"
+    },
+    "b-history.dc.html": {
+      "x": 0,
+      "y": 1184,
+      "w": 390,
+      "h": 844,
+      "title": "Evolução: dias",
+      "page": "telas"
+    },
+    "hist-day.dc.html": {
+      "x": 470,
+      "y": 1184,
+      "w": 390,
+      "h": 844,
+      "title": "Dia do histórico",
+      "page": "telas"
+    },
+    "b-progress.dc.html": {
+      "x": 940,
+      "y": 1184,
+      "w": 390,
+      "h": 844,
+      "title": "Evolução: exercícios",
+      "page": "telas"
+    },
+    "b-exercise.dc.html": {
+      "x": 1410,
+      "y": 1184,
+      "w": 390,
+      "h": 844,
+      "title": "Progressão do exercício",
+      "page": "telas"
+    },
+    "p-workouts.dc.html": {
+      "x": 0,
+      "y": 2368,
+      "w": 390,
+      "h": 844,
+      "title": "Treinos",
+      "page": "telas"
+    },
+    "p-workout-edit.dc.html": {
+      "x": 470,
+      "y": 2368,
+      "w": 390,
+      "h": 844,
+      "title": "Editar treino",
+      "page": "telas"
+    },
+    "p-item.dc.html": {
+      "x": 940,
+      "y": 2368,
+      "w": 390,
+      "h": 844,
+      "title": "Exercício no treino",
+      "page": "telas"
+    },
+    "p-picker.dc.html": {
+      "x": 1410,
+      "y": 2368,
+      "w": 390,
+      "h": 844,
+      "title": "Adicionar exercício",
+      "page": "telas"
+    },
+    "dumbbell-equipment.dc.html": {
+      "x": 1880,
+      "y": 2368,
+      "w": 390,
+      "h": 844,
+      "title": "Equipamento do exercício",
+      "page": "telas"
+    },
+    "p-profile.dc.html": {
+      "x": 0,
+      "y": 3552,
+      "w": 390,
+      "h": 844,
+      "title": "Perfil",
+      "page": "telas"
+    },
+    "dumbbell-review.dc.html": {
+      "x": 470,
+      "y": 3552,
+      "w": 390,
+      "h": 844,
+      "title": "Revisão das cargas antigas",
+      "page": "telas"
+    },
+    "p-backup.dc.html": {
+      "x": 940,
+      "y": 3552,
+      "w": 390,
+      "h": 844,
+      "title": "Backup e importação",
+      "page": "telas"
+    },
+    "onboarding.dc.html": {
+      "x": 1410,
+      "y": 3552,
+      "w": 390,
+      "h": 844,
+      "title": "Primeiro uso",
+      "page": "telas"
+    },
+    "android-lock.dc.html": {
+      "x": 0,
+      "y": 4736,
+      "w": 390,
+      "h": 844,
+      "title": "Tela bloqueada no descanso",
+      "page": "telas"
+    },
+    "android-shade.dc.html": {
+      "x": 470,
+      "y": 4736,
+      "w": 390,
+      "h": 844,
+      "title": "Notificação fixa na cortina",
+      "page": "telas"
+    },
+    "android-done.dc.html": {
+      "x": 940,
+      "y": 4736,
+      "w": 390,
+      "h": 844,
+      "title": "Fim do descanso bloqueado",
+      "page": "telas"
+    },
+    "b-tabs.dc.html": {
+      "x": 3760,
+      "y": 0,
+      "w": 390,
+      "h": 600,
+      "title": "Menu: alternativas (escolhida a 3)",
+      "page": "volt"
+    }
+  },
+  "order": [
+    "h-start.dc.html",
+    "h-switch.dc.html",
+    "b-workout.dc.html",
+    "b-header-scroll.dc.html",
+    "h-edit-set.dc.html",
+    "b-rest.dc.html",
+    "b-rest-pill.dc.html",
+    "b-rest-done.dc.html",
+    "h-time.dc.html",
+    "b-summary.dc.html",
+    "b-history.dc.html",
+    "hist-day.dc.html",
+    "b-progress.dc.html",
+    "b-exercise.dc.html",
+    "p-workouts.dc.html",
+    "p-workout-edit.dc.html",
+    "p-item.dc.html",
+    "p-picker.dc.html",
+    "dumbbell-equipment.dc.html",
+    "p-profile.dc.html",
+    "dumbbell-review.dc.html",
+    "p-backup.dc.html",
+    "onboarding.dc.html",
+    "android-lock.dc.html",
+    "android-shade.dc.html",
+    "android-done.dc.html",
+    "b-tabs.dc.html",
+    "Main.dc.html",
+    "a-rest.dc.html",
+    "a-rest-pill.dc.html",
+    "a-rest-done.dc.html",
+    "a-summary.dc.html",
+    "a-history.dc.html",
+    "a-exercise.dc.html",
+    "ios-lock.dc.html"
+  ],
+  "notes": {
+    "titleVolt": {
+      "x": 0,
+      "y": -300,
+      "text": "Arquivo: direção A e iPhone",
+      "kind": "title1",
+      "maxW": 3680,
+      "page": "volt"
+    },
+    "row0": {
+      "x": 0,
+      "y": -170,
+      "text": "Hoje",
+      "kind": "title1",
+      "maxW": 4620,
+      "page": "telas"
+    },
+    "row1": {
+      "x": 0,
+      "y": 1014,
+      "text": "Evolução",
+      "kind": "title1",
+      "maxW": 1800,
+      "page": "telas"
+    },
+    "row2": {
+      "x": 0,
+      "y": 2198,
+      "text": "Treinos",
+      "kind": "title1",
+      "maxW": 2270,
+      "page": "telas"
+    },
+    "row3": {
+      "x": 0,
+      "y": 3382,
+      "text": "Perfil (avatar)",
+      "kind": "title1",
+      "maxW": 1800,
+      "page": "telas"
+    },
+    "row4": {
+      "x": 0,
+      "y": 4566,
+      "text": "Fora do app: Android",
+      "kind": "title1",
+      "maxW": 1330,
+      "page": "telas"
+    }
+  },
+  "designSystems": []
+}

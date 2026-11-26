@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Fim do descanso, direção B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ph{width:390px;height:844px;box-sizing:border-box;background:#101113;color:#F2F0EC;font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;position:relative;overflow:hidden}
+.m{font-family:'JetBrains Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.dim{color:#A8A49D}
+.faint{color:#8A867F}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.card{background:#1A1C20;border-radius:22px;border:1px solid rgba(255,255,255,.06)}
+.tabbar{position:absolute;left:20px;right:20px;bottom:24px;height:62px;box-sizing:border-box;border-radius:31px;background:#1F2125;border:1px solid rgba(255,255,255,.08);display:flex;padding:0 8px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:#8A867F}
+.tab.on{color:#FF7A45}
+.pbtn{height:54px;border-radius:27px;background:#FF7A45;color:#1A0D06;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.tbl{display:grid;grid-template-columns:36px minmax(0,1fr) 72px 60px 36px;align-items:center;column-gap:8px}
+.cell{height:40px;border-radius:10px;background:#24272C;display:flex;align-items:center;justify-content:center;font-size:17px}
+.dot{width:28px;height:28px;box-sizing:border-box;border-radius:50%;border:2px solid #3A3D44}
+.done{width:28px;height:28px;border-radius:50%;background:#FF7A45;color:#1A0D06;display:flex;align-items:center;justify-content:center}
+.done .ic{width:15px;height:15px;stroke-width:3}
+.stp{flex:1;display:flex;align-items:center;height:52px;border-radius:26px;background:#24272C}
+.stp .btn{width:52px;height:52px;font-weight:700;font-size:14px;color:#D6D2CB}
+.stp .v{flex:1;text-align:center}
+.up{display:flex;align-items:center;gap:12px;padding:14px 16px}
+</style>
+</helmet>
+<div class="ph" style="padding: 0 14px">
+  <section class="card" style="margin-top: 70px; padding: 64px 16px 18px; border-radius: 0 0 22px 22px; border-top: 0; display: flex; flex-direction: column; gap: 14px; border-color: rgba(255,122,69,.35)">
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <div class="tbl">
+        <span class="m" style="font-size: 16px; text-align: center">1</span>
+        <span class="m faint" style="font-size: 14px">14 × 12</span>
+        <span class="cell m" style="background: none">16</span>
+        <span class="cell m" style="background: none">11</span>
+        <span class="done"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+      </div>
+      <div class="tbl" style="padding: 6px 8px; margin: 0 -8px; border-radius: 14px; background: rgba(255,122,69,.07)">
+        <span class="m" style="font-size: 16px; color: #FF7A45; text-align: center">2</span>
+        <span class="m faint" style="font-size: 14px">14 × 12</span>
+        <span class="cell m" style="box-shadow: inset 0 0 0 2px #FF7A45">16</span>
+        <span class="cell m">10</span>
+        <span class="dot" style="border-color: #FF7A45"></span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <div class="stp"><button class="btn" aria-label="Menos 2 kg">−2</button><span class="v m" style="font-size: 15px">16 kg</span><button class="btn" aria-label="Mais 2 kg">+2</button></div>
+      <div class="stp"><button class="btn" aria-label="Menos 1 rep">−1</button><span class="v m" style="font-size: 15px">10</span><button class="btn" aria-label="Mais 1 rep">+1</button></div>
+    </div>
+    <button class="btn pbtn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="stroke-width: 2.6"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Registrar série 2</button>
+  </section>
+  <div class="card" style="margin-top: 12px">
+    <div class="up"><div style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 600">Remada baixa</span><span class="faint m" style="font-size: 12px">2 × 10–12</span></div><span class="m dim" style="font-size: 14px">50 kg</span></div>
+    <div class="up" style="border-top: 1px solid rgba(255,255,255,.06)"><div style="flex: 1; display: flex; flex-direction: column"><span style="font-weight: 600">Face pull</span><span class="faint m" style="font-size: 12px">2 × 12–20</span></div><span class="m dim" style="font-size: 14px">20 kg</span></div>
+  </div>
+
+  <header style="position: absolute; left: 0; right: 0; top: 0; padding: 52px 20px 12px; background: rgba(16,17,19,.94); display: flex; flex-direction: column; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.06)">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <span style="font-size: 18px; font-weight: 700; letter-spacing: -.01em">Superior B</span>
+      <span class="m" style="font-size: 15px">9<span class="faint">/16</span></span>
+      <span class="m faint" style="font-size: 13px; margin-left: auto">35:50</span>
+    </div>
+    <div style="display: flex; gap: 3px" aria-hidden="true"><i style="flex: 3; height: 4px; border-radius: 2px; background: #FF7A45"></i><i style="flex: 3; height: 4px; border-radius: 2px; background: #FF7A45"></i><i style="flex: 2; height: 4px; border-radius: 2px; background: #FF7A45"></i><i style="flex: 2; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #FF7A45 50%, #3A3D44 50%)"></i><i style="flex: 2; height: 4px; border-radius: 2px; background: #2A2D33"></i><i style="flex: 2; height: 4px; border-radius: 2px; background: #2A2D33"></i><i style="flex: 2; height: 4px; border-radius: 2px; background: #2A2D33"></i></div>
+  </header>
+
+  <div aria-hidden="true" style="position: absolute; left: 12px; right: 12px; bottom: 90px; height: 76px; border-radius: 38px; background: rgba(255,122,69,.18)"></div>
+  <button class="btn" aria-label="Descanso acabou. Série 2 de 2" style="position: absolute; left: 20px; right: 20px; bottom: 98px; height: 60px; border-radius: 30px; background: #FF7A45; color: #1A0D06; box-shadow: 0 12px 36px rgba(255,122,69,.3); display: flex; align-items: center; gap: 12px; padding: 0 8px 0 14px; text-align: left">
+    <span style="width: 40px; height: 40px; border-radius: 50%; background: rgba(26,13,6,.14); display: flex; align-items: center; justify-content: center"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px; stroke-width: 2.2"><rect x="8" y="4" width="8" height="16" rx="2"/><path d="M4 8v8M20 8v8"/></svg></span>
+    <span style="flex: 1; display: flex; flex-direction: column; line-height: 1.2">
+      <span style="font-size: 16px; font-weight: 700">Hora da série 2</span>
+      <span class="m" style="font-size: 12px; opacity: .75">16 × 10</span>
+    </span>
+    <span style="height: 44px; padding: 0 16px; border-radius: 22px; background: #1A0D06; color: #FF9A70; display: flex; align-items: center; font-weight: 700; font-size: 14px">Abrir</span>
+  </button>
+
+  <nav class="tabbar" aria-label="Menu"><button class="btn tab on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>Hoje</button><button class="btn tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-4M11 16V8M16 16v-6M21 16V4"/></svg>Evolução</button><button class="btn tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Treinos</button></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

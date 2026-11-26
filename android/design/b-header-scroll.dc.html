@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Cabeçalho encolhendo com a rolagem</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ph{width:390px;height:640px;box-sizing:border-box;background:#101113;color:#F2F0EC;font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;position:relative;overflow:hidden}
+.m{font-family:'JetBrains Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.faint{color:#8A867F}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.card{background:#1A1C20;border-radius:20px;border:1px solid rgba(255,255,255,.06)}
+.qb{flex:1;height:40px;border-radius:20px;background:#24272C;font-size:13px;font-weight:600;color:#D6D2CB}
+</style>
+</helmet>
+<div class="ph">
+  <div style="position: relative; height: 470px; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,.08)">
+    <div style="{{contentStyle}}">
+      <div class="card" style="height: 130px; margin: 0 14px 12px"></div>
+      <div class="card" style="height: 260px; margin: 0 14px 12px; border-color: rgba(255,122,69,.35)"></div>
+      <div class="card" style="height: 140px; margin: 0 14px"></div>
+    </div>
+    <header style="{{headerStyle}}">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="flex: 1; display: flex; flex-direction: column; min-width: 0">
+          <span style="{{eyebrowStyle}}">Quinta, 26 nov</span>
+          <div style="display: flex; align-items: baseline; gap: {{titleGap}}">
+            <span style="{{titleStyle}}">Superior B</span>
+            <span class="m" style="{{inlineCountStyle}}">9<span class="faint">/16</span></span>
+          </div>
+        </div>
+        <div style="{{timerStyle}}"><span class="m">35:02</span></div>
+        <div style="{{avatarStyle}}">CF</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: {{rowGap}}">
+        <div style="flex: 1; display: flex; gap: {{segGap}}">
+          <i style="flex: 3; height: {{barH}}; border-radius: 4px; background: #FF7A45"></i>
+          <i style="flex: 3; height: {{barH}}; border-radius: 4px; background: #FF7A45"></i>
+          <i style="flex: 2; height: {{barH}}; border-radius: 4px; background: #FF7A45"></i>
+          <i style="flex: 2; height: {{barH}}; border-radius: 4px; background: linear-gradient(90deg, #FF7A45 50%, #3A3D44 50%)"></i>
+          <i style="flex: 2; height: {{barH}}; border-radius: 4px; background: #2A2D33"></i>
+          <i style="flex: 2; height: {{barH}}; border-radius: 4px; background: #2A2D33"></i>
+          <i style="flex: 2; height: {{barH}}; border-radius: 4px; background: #2A2D33"></i>
+        </div>
+        <span class="m" style="{{sideCountStyle}}">9<span class="faint">/16</span></span>
+      </div>
+    </header>
+  </div>
+
+  <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px">
+    <label style="display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 13px; font-weight: 600">Rolagem: <span class="m">{{pct}}%</span></span>
+      <input type="range" min="0" max="100" value="{{pct}}" onChange="{{onSlide}}" style="width: 100%; accent-color: #FF7A45">
+    </label>
+    <div style="display: flex; gap: 8px">
+      <button class="btn qb" onClick="{{go0}}">0%</button>
+      <button class="btn qb" onClick="{{go50}}">50%</button>
+      <button class="btn qb" onClick="{{go100}}">100%</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { pct: 0 };
+  }
+  renderVals() {
+    const pct = this.state.pct;
+    const p = pct / 100;
+    const lerp = (a, b) => a + (b - a) * p;
+    const clamp = (v) => Math.max(0, Math.min(1, v));
+    const early = clamp(p * 2);
+    const late = clamp(p * 2 - 1);
+    const headerH = lerp(150, 84);
+    return {
+      pct,
+      onSlide: (e) => this.setState({ pct: Number(e.target.value) }),
+      go0: () => this.setState({ pct: 0 }),
+      go50: () => this.setState({ pct: 50 }),
+      go100: () => this.setState({ pct: 100 }),
+      headerStyle: `position: absolute; left: 0; right: 0; top: 0; box-sizing: border-box; height: ${headerH}px; padding: ${lerp(54, 46)}px 20px 12px; display: flex; flex-direction: column; justify-content: flex-end; gap: ${lerp(12, 8)}px; background: rgba(16,17,19,${lerp(0, 0.94)}); border-bottom: 1px solid rgba(255,255,255,${lerp(0, 0.06)})`,
+      contentStyle: `position: absolute; left: 0; right: 0; top: ${162 - p * 180}px`,
+      eyebrowStyle: `font-size: 12px; font-weight: 500; color: #A8A49D; opacity: ${1 - early}; height: ${lerp(17, 0)}px; overflow: hidden`,
+      titleStyle: `font-size: ${lerp(30, 18)}px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; white-space: nowrap`,
+      inlineCountStyle: `font-size: 15px; opacity: ${late}; max-width: ${late * 52}px; overflow: hidden; white-space: nowrap; display: inline-block`,
+      sideCountStyle: `font-size: 15px; opacity: ${1 - early}; max-width: ${(1 - early) * 52}px; overflow: hidden; white-space: nowrap; text-align: right; flex: none`,
+      rowGap: `${(1 - early) * 12}px`,
+      titleGap: `${late * 10}px`,
+      timerStyle: `height: ${lerp(40, 24)}px; padding: 0 ${lerp(12, 0)}px; border-radius: 20px; background: rgba(26,28,32,${1 - p}); display: flex; align-items: center; font-size: ${lerp(15, 13)}px; color: ${p > 0.5 ? '#8A867F' : '#F2F0EC'}`,
+      avatarStyle: `width: ${lerp(40, 0)}px; height: ${lerp(40, 0)}px; opacity: ${1 - early}; border-radius: 50%; background: #24272C; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; overflow: hidden; flex: none`,
+      barH: `${lerp(8, 4)}px`,
+      segGap: `${lerp(4, 3)}px`,
+    };
+  }
+}
+</script>
+</body>
+</html>

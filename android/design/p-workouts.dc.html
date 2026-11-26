@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Meus treinos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ph{width:390px;height:844px;box-sizing:border-box;background:#101113;color:#F2F0EC;font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;position:relative;overflow:hidden}
+.m{font-family:'JetBrains Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.dim{color:#A8A49D}
+.faint{color:#8A867F}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.card{background:#1A1C20;border-radius:22px;border:1px solid rgba(255,255,255,.06)}
+.lbl{font-size:12px;font-weight:500;color:#A8A49D}
+.tag{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:8px;background:#24272C;color:#D6D2CB;font-size:12px;font-weight:500;white-space:nowrap}
+.tag .ic{width:14px;height:14px}
+.tag.acc{background:rgba(255,122,69,.14);color:#FF9A70}
+.tabbar{position:absolute;left:20px;right:20px;bottom:24px;height:62px;box-sizing:border-box;border-radius:31px;background:#1F2125;border:1px solid rgba(255,255,255,.08);display:flex;padding:0 8px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:600;color:#8A867F}
+.tab.on{color:#FF7A45}
+.pbtn{height:54px;border-radius:27px;background:#FF7A45;color:#1A0D06;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.tbl{display:grid;grid-template-columns:36px minmax(0,1fr) 72px 60px 36px;align-items:center;column-gap:8px}
+.cell{height:40px;border-radius:10px;background:#24272C;display:flex;align-items:center;justify-content:center;font-size:17px}
+.dot{width:28px;height:28px;box-sizing:border-box;border-radius:50%;border:2px solid #3A3D44}
+.done{width:22px;height:22px;border-radius:50%;background:#FF7A45;color:#1A0D06;display:flex;align-items:center;justify-content:center;flex:none}
+.done .ic{width:13px;height:13px;stroke-width:3}
+.stp{flex:1;display:flex;align-items:center;height:52px;border-radius:26px;background:#24272C}
+.stp .btn{width:52px;height:52px;font-weight:700;font-size:14px;color:#D6D2CB}
+.stp .v{flex:1;text-align:center}
+.rir .btn{width:40px;height:36px;border-radius:10px;background:#24272C;font-weight:600;color:#D6D2CB}
+.row{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px}
+.row+.row{border-top:1px solid rgba(255,255,255,.06)}
+.chev{width:18px;height:18px;color:#8A867F}
+.sec{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8A867F;padding:0 6px}
+.tg{width:46px;height:28px;border-radius:14px;background:#3A3D44;position:relative;flex:none}
+.tg::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#D6D2CB}
+.tg.on{background:#FF7A45}.tg.on::after{left:21px;background:#1A0D06}
+.gbtn{height:50px;border-radius:25px;background:#24272C;color:#F2F0EC;font-weight:600;font-size:15px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#1A1C20;border-radius:28px 28px 0 0;padding:10px 18px 34px;display:flex;flex-direction:column;gap:14px;border-top:1px solid rgba(255,255,255,.08)}
+.grab{width:40px;height:5px;border-radius:3px;background:#3A3D44;align-self:center}
+.chip{height:36px;padding:0 14px;border-radius:18px;background:#24272C;color:#D6D2CB;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.chip.on{background:#FF7A45;color:#1A0D06}
+.inp{height:48px;border-radius:14px;background:#24272C;display:flex;align-items:center;padding:0 14px;gap:10px;font-size:15px}
+</style>
+</helmet>
+<div class="ph" style="padding:54px 14px 0;display:flex;flex-direction:column;gap:14px">
+  <header style="display:flex;align-items:center;justify-content:space-between;padding:4px 6px 0"><h1 style="margin:0;font-size:30px;font-weight:700;letter-spacing:-.02em">Treinos</h1><div style="display:flex;gap:8px"><button class="btn" aria-label="Novo treino" style="width:40px;height:40px;border-radius:20px;background:#24272C;display:flex;align-items:center;justify-content:center"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><div style="width:40px;height:40px;border-radius:50%;background:#24272C;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">CF</div></div></header>
+  <span class="sec">Sequência</span>
+  <div class="card"><div class="row" style="min-height:60px"><span class="m faint" style="width:16px">1</span><span style="flex:1;display:flex;flex-direction:column"><span style="display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600">Superior A</span><span class="faint" style="font-size:12px">6 exercícios, 16 séries</span></span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:#5A5D64"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></svg></div><div class="row" style="min-height:60px"><span class="m faint" style="width:16px">2</span><span style="flex:1;display:flex;flex-direction:column"><span style="display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600">Pernas A</span><span class="faint" style="font-size:12px">6 exercícios, 17 séries</span></span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:#5A5D64"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></svg></div><div class="row" style="min-height:60px"><span class="m faint" style="width:16px">3</span><span style="flex:1;display:flex;flex-direction:column"><span style="display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600">Corrida Z2</span><span class="faint" style="font-size:12px">tempo, 30–40 min</span></span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:#5A5D64"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></svg></div><div class="row" style="min-height:60px"><span class="m faint" style="width:16px">4</span><span style="flex:1;display:flex;flex-direction:column"><span style="display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600">Superior B<span class="tag acc">próximo</span></span><span class="faint" style="font-size:12px">7 exercícios, 17 séries</span></span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:#5A5D64"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></svg></div><div class="row" style="min-height:60px"><span class="m faint" style="width:16px">5</span><span style="flex:1;display:flex;flex-direction:column"><span style="display:flex;gap:8px;align-items:center;font-size:15px;font-weight:600">Pernas B</span><span class="faint" style="font-size:12px">6 exercícios, 16 séries</span></span><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="color:#5A5D64"><path d="M9 6h.01M15 6h.01M9 12h.01M15 12h.01M9 18h.01M15 18h.01" stroke-width="3"/></svg></div></div>
+  <span class="sec">Exercícios</span>
+  <div class="card"><div class="row"><span style="flex:1;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:500">Todos os exercícios</span><span class=faint style=font-size:12px>42, com equipamento de cada um</span></span><svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></div></div>
+  <nav class="tabbar" aria-label="Menu"><button class="btn tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/></svg>Hoje</button><button class="btn tab"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16v-4M11 16V8M16 16v-6M21 16V4"/></svg>Evolução</button><button class="btn tab on" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Treinos</button></nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

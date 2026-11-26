@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Equipamento do exercício</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ph{width:390px;height:844px;box-sizing:border-box;background:#0B0C0F;color:#F4F6FA;font-family:Inter,system-ui,sans-serif;font-size:15px;line-height:1.4;position:relative;overflow:hidden}
+.n{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-variant-numeric:tabular-nums}
+.dim{color:#9AA3B2}
+.faint{color:#7C8594}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#9AA3B2}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.opt{height:48px;border-radius:12px;background:#15171C;border:1px solid rgba(255,255,255,.08);font-size:14px;font-weight:600;color:#C9D0DB;display:flex;align-items:center;justify-content:center;gap:6px}
+.opt.on{background:rgba(204,250,78,.12);border-color:#CCFA4E;color:#CCFA4E}
+.field{display:flex;align-items:center;justify-content:space-between;min-height:56px;padding:0 4px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sw{width:52px;height:32px;border-radius:16px;background:#CCFA4E;position:relative;flex:none}
+.sw i{position:absolute;right:3px;top:3px;width:26px;height:26px;border-radius:50%;background:#0F1704}
+.primary{height:56px;border-radius:16px;background:#CCFA4E;color:#0F1704;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;width:100%}
+</style>
+</helmet>
+<div class="ph">
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(0,0,0,.5)"></div>
+  <section aria-label="Editar exercício" style="position: absolute; left: 0; right: 0; bottom: 0; top: 70px; box-sizing: border-box; padding: 10px 20px 34px; border-radius: 28px 28px 0 0; background: #111317; border-top: 1px solid rgba(255,255,255,.10); display: flex; flex-direction: column; gap: 16px">
+    <div style="width: 40px; height: 5px; border-radius: 3px; background: #343944; align-self: center"></div>
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <h2 class="n" style="margin: 0; font-size: 32px; font-weight: 700; text-transform: uppercase; line-height: 1">Rosca martelo</h2>
+      <button class="btn" aria-label="Fechar" style="width: 44px; height: 44px; border-radius: 22px; background: #1E2128; display: flex; align-items: center; justify-content: center"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span class="eyebrow">Equipamento</span>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <button class="btn opt on">Halteres</button>
+        <button class="btn opt">Barra</button>
+        <button class="btn opt">Máquina</button>
+        <button class="btn opt">Cabo</button>
+        <button class="btn opt">Peso corporal</button>
+        <button class="btn opt">Outro</button>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column">
+      <div class="field">
+        <div style="display: flex; flex-direction: column"><span style="font-weight: 600">Volume conta 2 halteres</span><span class="faint" style="font-size: 13px">Carga anotada por halter</span></div>
+        <span class="sw" role="switch" aria-checked="true" aria-label="Volume conta 2 halteres"><i></i></span>
+      </div>
+      <div class="field" style="flex-direction: column; align-items: stretch; gap: 8px; padding: 14px 4px">
+        <span style="font-weight: 600">Passo do + e −</span>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+          <button class="btn opt">1 kg</button>
+          <button class="btn opt on">2 kg</button>
+          <button class="btn opt">2,5 kg</button>
+          <button class="btn opt">5 kg</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <span class="eyebrow">Prescrição</span>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <div style="padding: 10px; border-radius: 12px; background: #15171C; display: flex; flex-direction: column"><span class="faint" style="font-size: 12px">Séries</span><span class="n" style="font-size: 24px">2</span></div>
+        <div style="padding: 10px; border-radius: 12px; background: #15171C; display: flex; flex-direction: column"><span class="faint" style="font-size: 12px">Reps</span><span class="n" style="font-size: 24px">10–12</span></div>
+        <div style="padding: 10px; border-radius: 12px; background: #15171C; display: flex; flex-direction: column"><span class="faint" style="font-size: 12px">Descanso</span><span class="n" style="font-size: 24px">1:30</span></div>
+      </div>
+    </div>
+
+    <div style="padding: 12px 14px; border-radius: 14px; background: #15171C; display: flex; flex-direction: column; gap: 6px">
+      <span class="eyebrow" style="font-size: 11px">Máquina, para comparar</span>
+      <div style="display: flex; justify-content: space-between; font-size: 14px"><span class="dim">Peso da placa</span><span class="n" style="font-size: 20px">5 kg</span></div>
+      <div style="display: flex; justify-content: space-between; font-size: 14px"><span class="dim">Passo do + e −</span><span style="font-weight: 600">1 placa</span></div>
+    </div>
+
+    <button class="btn primary" style="margin-top: auto">Salvar</button>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

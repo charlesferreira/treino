@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Descanso expandido, direção B</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.ph{width:390px;height:844px;box-sizing:border-box;background:#101113;color:#F2F0EC;font-family:'DM Sans',system-ui,sans-serif;font-size:15px;line-height:1.4;position:relative;overflow:hidden}
+.m{font-family:'JetBrains Mono',monospace;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.dim{color:#A8A49D}
+.faint{color:#8A867F}
+.ic{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.btn{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.card{background:#1A1C20;border-radius:22px;border:1px solid rgba(255,255,255,.06)}
+.lbl{font-size:12px;font-weight:500;color:#A8A49D}
+.tag{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border-radius:8px;background:#24272C;color:#D6D2CB;font-size:12px;font-weight:500;white-space:nowrap}
+.tag.acc{background:rgba(255,122,69,.14);color:#FF9A70}
+.adj{flex:1;height:52px;border-radius:26px;background:#24272C;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+</style>
+</helmet>
+<div class="ph">
+  <div aria-hidden="true" style="opacity: .3; padding: 54px 20px 0">
+    <span class="lbl">Quinta, 26 nov</span>
+    <div style="font-size: 30px; font-weight: 700; letter-spacing: -.02em">Superior B</div>
+    <div style="display: flex; gap: 4px; margin-top: 12px"><i style="flex: 3; height: 8px; border-radius: 4px; background: #FF7A45"></i><i style="flex: 3; height: 8px; border-radius: 4px; background: #FF7A45"></i><i style="flex: 2; height: 8px; border-radius: 4px; background: #FF7A45"></i><i style="flex: 2; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #FF7A45 50%, #3A3D44 50%)"></i><i style="flex: 2; height: 8px; border-radius: 4px; background: #2A2D33"></i><i style="flex: 2; height: 8px; border-radius: 4px; background: #2A2D33"></i><i style="flex: 2; height: 8px; border-radius: 4px; background: #2A2D33"></i></div>
+  </div>
+
+  <section aria-label="Descanso" style="position: absolute; left: 8px; right: 8px; bottom: 8px; top: 150px; box-sizing: border-box; padding: 10px 20px 24px; border-radius: 32px; background: #1A1C20; border: 1px solid rgba(255,255,255,.08); box-shadow: 0 -10px 50px rgba(0,0,0,.6); display: flex; flex-direction: column; align-items: center; gap: 16px">
+    <div style="width: 40px; height: 5px; border-radius: 3px; background: #3A3D44"></div>
+    <div style="align-self: stretch; display: flex; align-items: center; justify-content: space-between">
+      <div style="display: flex; flex-direction: column">
+        <span class="lbl" style="color: #FF9A70">Descanso</span>
+        <span style="font-weight: 600">Rosca martelo</span>
+      </div>
+      <button class="btn" aria-label="Minimizar" style="width: 44px; height: 44px; border-radius: 22px; background: #24272C; display: flex; align-items: center; justify-content: center"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    </div>
+    <div style="position: relative; width: 250px; height: 250px">
+      <svg viewBox="0 0 250 250" width="250" height="250" role="img" aria-label="1:12 restantes de 1:30">
+        <circle cx="125" cy="125" r="110" fill="none" stroke="#2A2D33" stroke-width="14"/>
+        <circle cx="125" cy="125" r="110" fill="none" stroke="#FF7A45" stroke-width="14" stroke-linecap="round" stroke-dasharray="691" stroke-dashoffset="138" transform="rotate(-90 125 125)"/>
+      </svg>
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+        <span class="m" style="font-size: 68px; font-weight: 700; line-height: 1">1:12</span>
+        <span class="m faint" style="font-size: 14px; margin-top: 6px">de 1:30</span>
+      </div>
+    </div>
+    <div style="align-self: stretch; display: flex; gap: 8px">
+      <button class="btn adj">−15s</button>
+      <button class="btn adj">+15s</button>
+      <button class="btn adj" style="background: none; box-shadow: inset 0 0 0 1.5px #3A3D44">Pular</button>
+    </div>
+    <div style="align-self: stretch; margin-top: auto; padding: 14px 16px; border-radius: 20px; background: #101113; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="width: 20px; height: 20px; border-radius: 50%; background: #FF7A45; color: #1A0D06; display: flex; align-items: center; justify-content: center"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" style="width: 12px; height: 12px; stroke-width: 3"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        <span class="dim" style="font-size: 13px">Série 1</span>
+        <span class="m" style="font-size: 14px; margin-left: auto">16 × 11</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.06)">
+        <span style="width: 20px; height: 20px; box-sizing: border-box; border-radius: 50%; border: 2px solid #FF7A45"></span>
+        <span style="font-size: 13px; font-weight: 600">Próxima, série 2</span>
+        <span class="m" style="font-size: 14px; margin-left: auto">16 × 10</span>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
