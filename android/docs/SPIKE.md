@@ -141,6 +141,17 @@ adb shell dumpsys audio | grep treino
 adb shell dumpsys deviceidle unforce
 ```
 
+## Resultado no S23 (26 nov, release, One UI 8.5)
+
+Primeiro uso real, com o treino de verdade (Superior C) e o backup do PWA importado.
+
+| Item | Resultado |
+|---|---|
+| Notificação entre séries e de descanso na cortina | Aparecem, com a barra por exercício. Dá para fazer tudo pela notificação (Registrar série, −15s, +15s, Pular); tocar nela abre o descanso no app. |
+| Título e cronômetro | A One UI desenha o cronômetro colado no título, sem espaço e numa fonte menor ("Superior C (sex), 3/1603:58", "Descanso01:09"). Corrigido com um espaço largo (U+2003) no fim do título das duas notificações com cronômetro. Falta conferir de novo. |
+| Tela de bloqueio | O cartão não aparece. O aparelho está com `lockscreen_minimizing_notification=1` (Tela de bloqueio > Notificações mostrando só ícones). `dumpsys notification` mostra `PROMOTED_ONGOING`, `vis=PUBLIC`, importância 2. Falta testar com as notificações em cartão e ver se a Now Bar pega. |
+| Itens 2 a 11 abaixo | Ainda não testados no aparelho. |
+
 ## Para testar no S23
 
 Desde 26 nov o S23 tem o **release** assinado (`~/Downloads/treino-release-2026-11-26.apk`). A tela do

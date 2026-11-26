@@ -47,7 +47,7 @@ class RestNotifications(private val context: Context) {
         val builder = Notification.Builder(context, CHANNEL_REST)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(ORANGE)
-            .setContentTitle("Descanso")
+            .setContentTitle(beforeClock("Descanso"))
             .setContentText("${state.exerciseName}, ${state.setLabel}, ${state.target}")
             .setSubText(state.workoutName)
             .setContentIntent(openIntent())
@@ -101,7 +101,7 @@ class RestNotifications(private val context: Context) {
         val builder = Notification.Builder(context, CHANNEL_REST)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(ORANGE)
-            .setContentTitle("${info.workoutName}, ${info.progress.setsDone}/${info.progress.totalSets}")
+            .setContentTitle(beforeClock("${info.workoutName}, ${info.progress.setsDone}/${info.progress.totalSets}"))
             .setContentText(info.next)
             .setContentIntent(openIntent())
             .setOngoing(true)
@@ -194,4 +194,11 @@ class RestNotifications(private val context: Context) {
         private const val DONE_TIMEOUT_MS = 10 * 60_000L
         private const val EXTRA_REQUEST_PROMOTED_ONGOING = "android.requestPromotedOngoing"
     }
+
+    /**
+     * One UI draws the chronometer right after the title, with no gap ("3/1603:58"); other
+     * notifications get one before their time. An em space gives it the same air. Stock Android
+     * draws the chronometer in the header, where the trailing space shows nothing.
+     */
+    private fun beforeClock(title: String) = title + "\u2003"
 }

@@ -39,6 +39,9 @@ import androidx.compose.ui.unit.sp
 import dev.charlesferreira.treino.ui.components.PrimaryButton
 import dev.charlesferreira.treino.ui.components.TText
 import dev.charlesferreira.treino.ui.nav.Overlay
+import dev.charlesferreira.treino.ui.nav.overlayActive
+import dev.charlesferreira.treino.ui.nav.scrimMotion
+import dev.charlesferreira.treino.ui.nav.sheetMotion
 import dev.charlesferreira.treino.ui.theme.TreinoColors
 import dev.charlesferreira.treino.ui.theme.TreinoType
 
@@ -50,11 +53,12 @@ import dev.charlesferreira.treino.ui.theme.TreinoType
 @Composable
 fun Sheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
     Overlay {
-        BackHandler(onBack = onDismiss)
+        BackHandler(enabled = overlayActive(), onBack = onDismiss)
         Box(Modifier.fillMaxSize()) {
             Box(
                 Modifier
                     .fillMaxSize()
+                    .scrimMotion()
                     .background(TreinoColors.Scrim)
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
             )
@@ -65,6 +69,7 @@ fun Sheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
+                    .sheetMotion()
                     .clip(shape)
                     .background(TreinoColors.Card, shape)
                     .drawBehind {

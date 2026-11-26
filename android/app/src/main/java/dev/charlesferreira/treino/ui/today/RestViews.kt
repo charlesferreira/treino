@@ -1,6 +1,25 @@
 package dev.charlesferreira.treino.ui.today
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -92,13 +111,38 @@ interface RestActions {
  */
 @Composable
 fun RestLayer(view: RestView, rest: RestState?, actions: RestActions) {
-    if (rest == null || view == RestView.NONE) return
+    // The last rest stays drawn while its view leaves (Pular slides the sheet down).
+    val last = remember { arrayOfNulls<RestState>(1) }
+    if (rest != null) last[0] = rest
+    val sheet = remember { MutableTransitionState(false) }
+    val pill = remember { MutableTransitionState(false) }
+    val done = remember { MutableTransitionState(false) }
+    sheet.targetState = rest != null && view == RestView.SHEET
+    pill.targetState = rest != null && view == RestView.PILL
+    done.targetState = rest != null && view == RestView.DONE
+    val idle = listOf(sheet, pill, done).none { it.currentState || it.targetState }
+    if (idle) last[0] = null
+    val shown = last[0] ?: return
+
+    val rise = with(LocalDensity.current) { 40.dp.roundToPx() }
     FloatingOverlay {
-        when (view) {
-            RestView.SHEET -> RestSheet(rest, actions)
-            RestView.PILL -> RestPill(rest, actions)
-            RestView.DONE -> RestDonePill(rest, actions)
-            RestView.NONE -> Unit
+        Box(Modifier.fillMaxSize()) {
+            // Minimizing: the sheet slides down first, then the pill rises in its place.
+            AnimatedVisibility(
+                visibleState = pill,
+                enter = fadeIn(tween(200, delayMillis = 140)) +
+                    slideInVertically(tween(320, delayMillis = 100)) { rise } +
+                    scaleIn(tween(320, delayMillis = 100), initialScale = 0.94f),
+                exit = fadeOut(tween(120)) + scaleOut(tween(160), targetScale = 0.96f),
+            ) { RestPill(shown, actions) }
+            AnimatedVisibility(
+                visibleState = done,
+                enter = fadeIn(tween(200)) + slideInVertically(tween(320)) { rise } + scaleIn(tween(320), initialScale = 0.94f),
+                exit = fadeOut(tween(160)),
+            ) { RestDonePill(shown, actions) }
+            AnimatedVisibility(visibleState = sheet, enter = EnterTransition.None, exit = ExitTransition.None) {
+                RestSheet(shown, actions)
+            }
         }
     }
 }
@@ -136,8 +180,8 @@ private fun DrawScope.ring(radius: Float, stroke: Float, track: Color, fraction:
 /* -------------------------------------------------------------- b-rest */
 
 @Composable
-private fun RestSheet(rest: RestState, actions: RestActions) {
-    BackHandler(onBack = actions::onMinimize)
+private fun AnimatedVisibilityScope.RestSheet(rest: RestState, actions: RestActions) {
+    BackHandler(enabled = transition.targetState == EnterExitState.Visible, onBack = actions::onMinimize)
     val now = frameNow(running = true)
     val remaining by remember(rest) { derivedStateOf { RestMath.format(rest.remainingMs(now.value)) } }
     val total = RestMath.format(rest.totalMs)
@@ -149,12 +193,18 @@ private fun RestSheet(rest: RestState, actions: RestActions) {
         Box(
             Modifier
                 .fillMaxSize()
+                .animateEnterExit(enter = fadeIn(tween(300)), exit = fadeOut(tween(260)))
                 .background(TreinoColors.Background.copy(alpha = 0.7f))
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = actions::onMinimize),
         )
         Column(
             Modifier
                 .fillMaxSize()
+                // Slides up from below the screen, and back down when minimized or skipped.
+                .animateEnterExit(
+                    enter = slideInVertically(spring(dampingRatio = 0.86f, stiffness = Spring.StiffnessMediumLow, visibilityThreshold = IntOffset.VisibilityThreshold)) { it },
+                    exit = slideOutVertically(tween(260, easing = FastOutLinearInEasing)) { it },
+                )
                 // `top: 150px` with the design's 54 px status bar.
                 .padding(start = 8.dp, end = 8.dp, bottom = 8.dp, top = status + 96.dp)
                 .dropShadow(shape, Shadow(radius = 50.dp, color = Color.Black.copy(alpha = 0.6f), offset = DpOffset(0.dp, (-10).dp)))

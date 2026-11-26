@@ -160,6 +160,16 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   sets: {}}`). A sessão continua entrando (guarda o treino escolhido do dia, como o PWA usa na
   sugestão), mas a prévia agora conta dias como Evolução > Dias: com série, tempo ou nota (dizia 12).
 
+- [x] Transições (26 nov, pedido depois do primeiro uso no S23). Entre abas, a tela desliza na ordem
+  da barra (Hoje → Evolução vem da direita, Treinos → Hoje da esquerda). Telas empurradas (Perfil,
+  dia, treino, exercício, Backup...) entram pela direita sobre a atual, que recua 25% e escurece um
+  pouco; voltar faz o inverso e acompanha o dedo no gesto de voltar preditivo (antes era fade e, ao
+  voltar, a tela encolhia para o meio). A barra de abas sai e volta deslizando para baixo. As folhas
+  sobem de baixo com o scrim em fade e descem ao fechar (o host guarda a última folha enquanto ela
+  sai). O descanso expandido sobe com mola e desce ao minimizar ou pular; a pílula surge depois,
+  subindo um pouco. Código em `ui/nav/Transitions.kt`, `ui/nav/Overlay.kt` e `RestLayer`. Conferido
+  no S23 gravando a tela (abas, Perfil e volta); o descanso ainda não foi visto rodando.
+
 ## Decisões tomadas sozinho
 
 - Package e applicationId `dev.charlesferreira.treino`.

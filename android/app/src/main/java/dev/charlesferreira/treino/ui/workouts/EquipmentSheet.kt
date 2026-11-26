@@ -52,6 +52,9 @@ import dev.charlesferreira.treino.ui.components.TText
 import dev.charlesferreira.treino.ui.components.Toggle
 import dev.charlesferreira.treino.ui.components.TreinoIcons
 import dev.charlesferreira.treino.ui.nav.Overlay
+import dev.charlesferreira.treino.ui.nav.overlayActive
+import dev.charlesferreira.treino.ui.nav.scrimMotion
+import dev.charlesferreira.treino.ui.nav.sheetMotion
 import dev.charlesferreira.treino.ui.theme.TreinoColors
 import dev.charlesferreira.treino.ui.theme.TreinoType
 
@@ -69,11 +72,12 @@ fun EquipmentSheet(
 ) {
     var draft by remember(exercise.id) { mutableStateOf(EquipmentDraft.of(exercise)) }
     Overlay {
-        BackHandler(onBack = onDismiss)
+        BackHandler(enabled = overlayActive(), onBack = onDismiss)
         Box(Modifier.fillMaxSize()) {
             Box(
                 Modifier
                     .fillMaxSize()
+                    .scrimMotion()
                     .background(TreinoColors.Scrim)
                     .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, onClick = onDismiss),
             )
@@ -84,6 +88,7 @@ fun EquipmentSheet(
                 Modifier
                     .fillMaxSize()
                     .padding(top = top + 16.dp)
+                    .sheetMotion()
                     .clip(shape)
                     .background(TreinoColors.Card, shape)
                     .drawBehind { drawLine(TreinoColors.BorderStrong, Offset(0f, 0.5f), Offset(size.width, 0.5f), 1.dp.toPx()) }

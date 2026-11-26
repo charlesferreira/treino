@@ -1,8 +1,11 @@
 package dev.charlesferreira.treino.ui.nav
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,7 +25,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
@@ -84,10 +86,12 @@ private fun TreinoNavHost(start: Any) {
             navController = nav,
             startDestination = start,
             modifier = Modifier.fillMaxSize(),
-            enterTransition = { fadeIn(tween(160)) },
-            exitTransition = { fadeOut(tween(160)) },
+            enterTransition = { screenEnter() },
+            exitTransition = { screenExit() },
+            popEnterTransition = { screenPopEnter() },
+            popExitTransition = { screenPopExit() },
         ) {
-            composable<OnboardingRoute> {
+            screen<OnboardingRoute> {
                 OnboardingScreen(
                     onCreateWorkout = {
                         nav.navigate(TodayRoute) { popUpTo<OnboardingRoute> { inclusive = true } }
@@ -96,7 +100,7 @@ private fun TreinoNavHost(start: Any) {
                     onBackup = { nav.navigate(BackupRoute(firstUse = true)) },
                 )
             }
-            composable<TodayRoute> {
+            screen<TodayRoute> {
                 TodayScreen(
                     onProfile = profile,
                     onCreateWorkout = { nav.selectTab(Tab.WORKOUTS) },
@@ -104,21 +108,21 @@ private fun TreinoNavHost(start: Any) {
                     onSummary = { date -> nav.navigate(SummaryRoute(date)) { launchSingleTop = true } },
                 )
             }
-            composable<EvolutionRoute> {
+            screen<EvolutionRoute> {
                 EvolutionScreen(
                     onProfile = profile,
                     onDay = { date -> nav.navigate(HistoryDayRoute(date)) { launchSingleTop = true } },
                     onExercise = { id -> nav.navigate(ExerciseProgressRoute(id)) { launchSingleTop = true } },
                 )
             }
-            composable<WorkoutsRoute> {
+            screen<WorkoutsRoute> {
                 WorkoutsScreen(
                     onProfile = profile,
                     onWorkout = { id -> nav.navigate(WorkoutEditRoute(id)) { launchSingleTop = true } },
                     onExercises = { nav.navigate(ExercisePickerRoute(null)) { launchSingleTop = true } },
                 )
             }
-            composable<ProfileRoute> {
+            screen<ProfileRoute> {
                 ProfileScreen(
                     onBack = back,
                     onLoadReview = { nav.navigate(LoadReviewRoute) },
@@ -127,10 +131,10 @@ private fun TreinoNavHost(start: Any) {
                 )
             }
 
-            composable<SummaryRoute> { SummaryScreen(it.toRoute<SummaryRoute>().date, onClose = back) }
-            composable<HistoryDayRoute> { HistoryDayScreen(it.toRoute<HistoryDayRoute>().date, onBack = back) }
-            composable<ExerciseProgressRoute> { ExerciseProgressScreen(it.toRoute<ExerciseProgressRoute>().exerciseId, onBack = back) }
-            composable<WorkoutEditRoute> { entry ->
+            screen<SummaryRoute> { SummaryScreen(it.toRoute<SummaryRoute>().date, onClose = back) }
+            screen<HistoryDayRoute> { HistoryDayScreen(it.toRoute<HistoryDayRoute>().date, onBack = back) }
+            screen<ExerciseProgressRoute> { ExerciseProgressScreen(it.toRoute<ExerciseProgressRoute>().exerciseId, onBack = back) }
+            screen<WorkoutEditRoute> { entry ->
                 val workoutId = entry.toRoute<WorkoutEditRoute>().workoutId
                 // The picker leaves the new item here; its sheet opens on the way back.
                 val openItem by entry.savedStateHandle.getStateFlow<String?>(OPEN_ITEM, null).collectAsStateWithLifecycle()
@@ -145,7 +149,7 @@ private fun TreinoNavHost(start: Any) {
                     },
                 )
             }
-            composable<ExercisePickerRoute> { entry ->
+            screen<ExercisePickerRoute> { entry ->
                 ExercisePickerScreen(
                     workoutId = entry.toRoute<ExercisePickerRoute>().workoutId,
                     onBack = back,
@@ -155,7 +159,7 @@ private fun TreinoNavHost(start: Any) {
                     },
                 )
             }
-            composable<BackupRoute> {
+            screen<BackupRoute> {
                 BackupScreen(
                     firstUse = it.toRoute<BackupRoute>().firstUse,
                     onBack = back,
@@ -167,9 +171,9 @@ private fun TreinoNavHost(start: Any) {
                     },
                 )
             }
-            composable<LoadReviewRoute> { LoadReviewScreen(onBack = back) }
+            screen<LoadReviewRoute> { LoadReviewScreen(onBack = back) }
             if (BuildConfig.DEBUG) {
-                composable<TimerSpikeRoute> {
+                screen<TimerSpikeRoute> {
                     Column(Modifier.fillMaxSize().statusBarsPadding().padding(start = 14.dp, end = 14.dp, top = 6.dp)) {
                         SubScreenHeader("Timer (spike)", back)
                         TimerSpikeScreen()
@@ -177,9 +181,17 @@ private fun TreinoNavHost(start: Any) {
                 }
             }
         }
-        if (tab != null) {
+        // The bar leaves with the tab screen when a screen is pushed, and comes back with it.
+        var lastTab by remember { mutableStateOf(Tab.TODAY) }
+        if (tab != null) lastTab = tab
+        AnimatedVisibility(
+            visible = tab != null,
+            modifier = Modifier.align(Alignment.BottomCenter),
+            enter = fadeIn(tween(220, delayMillis = 80)) + slideInVertically(tween(320)) { it / 2 },
+            exit = fadeOut(tween(160)) + slideOutVertically(tween(320)) { it / 2 },
+        ) {
             TabBar(
-                selected = tab,
+                selected = lastTab,
                 onSelect = { t ->
                     // Evolução again from the exercise's progression goes back to the tab's root.
                     if (t == Tab.EVOLUTION && destination?.hasRoute<ExerciseProgressRoute>() == true) {
@@ -188,12 +200,11 @@ private fun TreinoNavHost(start: Any) {
                         nav.selectTab(t)
                     }
                 },
-                modifier = Modifier.align(Alignment.BottomCenter),
             )
         }
         // The rest, then the sheets of the current screen, over the tab bar.
         overlay.floating?.invoke()
-        overlay.content?.invoke()
+        AnimatedOverlayLayer(overlay.content)
     }
     }
 }
