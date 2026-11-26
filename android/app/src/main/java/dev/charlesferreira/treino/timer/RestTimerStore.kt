@@ -1,7 +1,12 @@
 package dev.charlesferreira.treino.timer
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.core.content.edit
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /**
  * The running rest, in SharedPreferences, plus the sound/vibration switches the Profile turns on
@@ -25,6 +30,9 @@ class RestTimerStore(context: Context) {
             target = prefs.getString(TARGET, "").orEmpty(),
             progress = WorkoutProgress(plan, done),
             finished = prefs.getBoolean(FINISHED, false),
+            nextShort = prefs.getString(NEXT_SHORT, null) ?: prefs.getString(TARGET, "").orEmpty(),
+            loggedLabel = prefs.getString(LOGGED_LABEL, "").orEmpty(),
+            loggedValue = prefs.getString(LOGGED_VALUE, "").orEmpty(),
         )
     }
 
@@ -41,13 +49,30 @@ class RestTimerStore(context: Context) {
             putString(PLAN, RestProgress.encode(state.progress.setsPerExercise))
             putInt(SETS_DONE, state.progress.setsDone)
             putBoolean(FINISHED, state.finished)
+            putString(NEXT_SHORT, state.nextShort)
+            putString(LOGGED_LABEL, state.loggedLabel)
+            putString(LOGGED_VALUE, state.loggedValue)
         }
     }
+
+    /**
+     * The rest as it changes in this process (service, receivers and the app share one process, and
+     * SharedPreferences tells every listener). Settings changes emit too, which is harmless.
+     */
+    fun observe(): Flow<RestState?> = callbackFlow {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> trySend(load()) }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        trySend(load())
+        awaitClose { prefs.unregisterOnSharedPreferenceChangeListener(listener) }
+    }.distinctUntilChanged()
 
     /** Drops the rest, keeps the settings. */
     fun clear() {
         prefs.edit(commit = true) {
-            listOf(ACTIVE, ENDS_AT, TOTAL_MS, WORKOUT, EXERCISE, SET_NUMBER, SET_COUNT, TARGET, PLAN, SETS_DONE, FINISHED)
+            listOf(
+                ACTIVE, ENDS_AT, TOTAL_MS, WORKOUT, EXERCISE, SET_NUMBER, SET_COUNT, TARGET, PLAN, SETS_DONE, FINISHED,
+                NEXT_SHORT, LOGGED_LABEL, LOGGED_VALUE,
+            )
                 .forEach { remove(it) }
         }
     }
@@ -73,6 +98,9 @@ class RestTimerStore(context: Context) {
         const val PLAN = "plan"
         const val SETS_DONE = "sets_done"
         const val FINISHED = "finished"
+        const val NEXT_SHORT = "next_short"
+        const val LOGGED_LABEL = "logged_label"
+        const val LOGGED_VALUE = "logged_value"
         const val SOUND_ENABLED = "sound_enabled"
         const val VIBRATION_ENABLED = "vibration_enabled"
     }

@@ -129,7 +129,8 @@ private fun TreinoNavHost(start: Any) {
         if (tab != null) {
             TabBar(selected = tab, onSelect = { nav.selectTab(it) }, modifier = Modifier.align(Alignment.BottomCenter))
         }
-        // Sheets of the current screen, over the tab bar.
+        // The rest, then the sheets of the current screen, over the tab bar.
+        overlay.floating?.invoke()
         overlay.content?.invoke()
     }
     }

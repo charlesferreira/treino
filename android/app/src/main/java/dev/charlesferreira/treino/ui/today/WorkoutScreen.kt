@@ -89,6 +89,7 @@ fun WorkoutScreen(
     setDraft: (ItemUi) -> SetDraft,
     timeDraft: (ItemUi) -> TimeDraft,
     actions: WorkoutActions,
+    bottomExtra: Dp = 0.dp,
 ) {
     val scroll = rememberScrollState()
     val density = LocalDensity.current
@@ -107,7 +108,7 @@ fun WorkoutScreen(
                     start = 14.dp,
                     end = 14.dp,
                     top = statusOffset + HeaderScroll.CONTENT_TOP_DP.dp,
-                    bottom = maxOf(TabBarDefaults.bottomOffset() + TabBarDefaults.Height + 18.dp, ime + 12.dp),
+                    bottom = maxOf(TabBarDefaults.bottomOffset() + TabBarDefaults.Height + 18.dp + bottomExtra, ime + 12.dp),
                 ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {

@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import kotlinx.coroutines.launch
 
 /** Fired by AlarmManager at the end of the rest. Hands off to the service, which owns the alert. */
 class RestDoneReceiver : BroadcastReceiver() {
@@ -30,11 +31,27 @@ class RestActionReceiver : BroadcastReceiver() {
             ACTION_MINUS_15 -> RestTimer.adjust(context, -15_000)
             ACTION_PLUS_15 -> RestTimer.adjust(context, 15_000)
             ACTION_PLUS_30 -> RestTimer.adjust(context, 30_000)
-            ACTION_SKIP -> RestTimer.skip(context)
+            ACTION_SKIP -> {
+                RestTimer.skip(context)
+                async { RestTimer.restOverHandler.onRestOver(context) }
+            }
             ACTION_LOG_SET -> {
                 val state = RestTimerStore(context).load()
-                if (state == null) Log.w(RestLog.TAG, "log set without a rest in the store")
-                else RestTimer.setLogHandler.onLogSet(context, state)
+                async { RestTimer.setLogHandler.onLogSet(context, state) }
+            }
+        }
+    }
+
+    /** Room work off the main thread; goAsync keeps the process up until it is done (≤ 10 s). */
+    private fun async(block: suspend () -> Unit) {
+        val pending = goAsync()
+        RestTimer.handlerScope.launch {
+            try {
+                block()
+            } catch (e: Exception) {
+                Log.e(RestLog.TAG, "notification action failed", e)
+            } finally {
+                pending.finish()
             }
         }
     }

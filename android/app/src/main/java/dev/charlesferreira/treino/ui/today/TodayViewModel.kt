@@ -1,5 +1,6 @@
 package dev.charlesferreira.treino.ui.today
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.charlesferreira.treino.data.DaySummary
@@ -11,6 +12,9 @@ import dev.charlesferreira.treino.domain.Session
 import dev.charlesferreira.treino.domain.Steps
 import dev.charlesferreira.treino.domain.Workout
 import dev.charlesferreira.treino.domain.WorkoutItem
+import dev.charlesferreira.treino.timer.RestState
+import dev.charlesferreira.treino.timer.RestTimer
+import dev.charlesferreira.treino.workout.WorkoutTimer
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,8 +39,54 @@ sealed interface TodaySheet {
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TodayViewModel(private val repository: TreinoRepository) : ViewModel() {
+class TodayViewModel(
+    private val repository: TreinoRepository,
+    private val workoutTimer: WorkoutTimer,
+    private val app: Context,
+) : ViewModel() {
     val date: String = repository.today()
+
+    /* ------------------------------------------------------------------- Rest */
+
+    /** Bumped on resume: the store is read again (a rest may have changed while away). */
+    private val restReload = MutableStateFlow(0)
+
+    /** The running (or just finished) rest, from the timer's store. */
+    val rest: StateFlow<RestState?> = restReload
+        .flatMapLatest { RestTimer.observe(app) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, RestTimer.state(app))
+
+    private val _restExpanded = MutableStateFlow(false)
+
+    /** A rest that starts while Hoje is alive opens expanded; one already running when it opened shows as the pill. */
+    val restExpanded: StateFlow<Boolean> = _restExpanded
+
+    init {
+        viewModelScope.launch {
+            var seen = RestTimer.state(app)?.startedAtMs
+            rest.collect { r ->
+                when {
+                    r == null || r.finished -> _restExpanded.value = false
+                    r.startedAtMs != seen -> _restExpanded.value = true
+                }
+                seen = r?.startedAtMs
+            }
+        }
+    }
+
+    fun reloadRest() {
+        restReload.update { it + 1 }
+    }
+
+    fun expandRest(expanded: Boolean) {
+        _restExpanded.value = expanded
+    }
+
+    fun adjustRest(deltaMs: Long) = RestTimer.adjust(app, deltaMs)
+
+    fun skipRest() = RestTimer.skip(app)
+
+    fun restDoneSeen() = RestTimer.dismissFinished(app)
 
     private val selectedItemId = MutableStateFlow<String?>(null)
 
@@ -185,20 +235,17 @@ class TodayViewModel(private val repository: TreinoRepository) : ViewModel() {
     }
 
     /**
-     * "Registrar série N": the single place a set of the workout screen is logged. The next phase
-     * starts the rest here.
+     * "Registrar série N": the single place a set of the workout screen is logged. The rest starts
+     * here (none after the last set of the workout); see [WorkoutTimer.afterSetLogged].
      */
     fun onSetLogged(ui: ItemUi, weightKg: Double, reps: Int) {
         val key = ui.draftKey()
         viewModelScope.launch {
-            repository.logSet(date, ui.exercise.id, weightKg, reps)
+            val set = repository.logSet(date, ui.exercise.id, weightKg, reps)
             setEdits.update { it - key }
             // The exercise is complete: the card moves on to the next one not done.
             if (ui.sets.size + 1 >= ui.total) selectedItemId.update { if (it == ui.item.id) null else it }
-            // TODO(Fase 4): start the rest here, e.g.
-            //  if (ui.item.restSec > 0) RestTimer.start(context, RestRequest(durationMs = ui.item.restSec * 1000L,
-            //      workoutName, exerciseName = ui.exercise.name, setNumber = ui.sets.size + 1, setCount = ui.total,
-            //      target = ui.target, progress = ...))
+            workoutTimer.afterSetLogged(date, ui.item.id, set)
         }
     }
 
@@ -235,6 +282,7 @@ class TodayViewModel(private val repository: TreinoRepository) : ViewModel() {
     /** "Terminar treino": sets the end, then [then] opens the summary. */
     fun finish(then: () -> Unit) {
         viewModelScope.launch {
+            if (RestTimer.state(app) != null) RestTimer.skip(app)
             repository.finishSession(date)
             then()
         }

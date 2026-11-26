@@ -23,6 +23,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        RestTimer.appInForeground = true
         RestTimer.resumeIfActive(this)
+    }
+
+    override fun onPause() {
+        RestTimer.appInForeground = false
+        super.onPause()
     }
 }

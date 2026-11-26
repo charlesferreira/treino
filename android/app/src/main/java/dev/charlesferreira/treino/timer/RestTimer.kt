@@ -4,10 +4,26 @@ import android.app.ForegroundServiceStartNotAllowedException
 import android.content.Context
 import android.os.Build
 import android.util.Log
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 
-/** Called by the "Registrar série" notification action. Phase 4 replaces it with a Room write. */
+/**
+ * Called by the "Registrar série" notification action, off the main thread, from a receiver that
+ * may be in a fresh process. [state] is the rest in the store, if any. The app writes the set to
+ * Room and starts the next rest; the notification tap allows the foreground service start.
+ */
 fun interface SetLogHandler {
-    fun onLogSet(context: Context, state: RestState)
+    suspend fun onLogSet(context: Context, state: RestState?)
+}
+
+/**
+ * Called when a rest is over (skipped, or its end alert rang), off the main thread. The app posts
+ * its "between sets" notification here, since the rest notification goes away with the service.
+ */
+fun interface RestOverHandler {
+    suspend fun onRestOver(context: Context)
 }
 
 /**
@@ -19,6 +35,7 @@ fun interface SetLogHandler {
  * RestTimer.start(context, RestRequest(durationMs = 90_000, workoutName = "Superior B", ...))
  * RestTimer.state(context)?.remainingMs(System.currentTimeMillis())
  * RestTimer.setLogHandler = SetLogHandler { ctx, state -> /* write the set to Room */ }  // in Application.onCreate
+ * RestTimer.restOverHandler = RestOverHandler { ctx -> /* post the between-sets notification */ }
  * ```
  */
 object RestTimer {
@@ -26,8 +43,22 @@ object RestTimer {
     /** Default only logs. Set it in Application.onCreate so a receiver in a fresh process sees it. */
     @Volatile
     var setLogHandler: SetLogHandler = SetLogHandler { _, state ->
-        Log.i(RestLog.TAG, "log set requested: ${state.exerciseName} ${state.setLabel} ${state.target} (Phase 4 writes to Room)")
+        Log.i(RestLog.TAG, "log set requested without a handler: ${state?.exerciseName} ${state?.target}")
     }
+
+    /** Set in Application.onCreate, like [setLogHandler]. */
+    @Volatile
+    var restOverHandler: RestOverHandler = RestOverHandler { }
+
+    /**
+     * True while the app's Activity is resumed. The end of a rest then shows in the app (the done
+     * pill) and the heads-up is not posted over it; sound and vibration still play.
+     */
+    @Volatile
+    var appInForeground: Boolean = false
+
+    /** Where receivers and the service run the handlers. Never cancelled: work here is short. */
+    internal val handlerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     /** Starts (or restarts) a rest. Call from the foreground: it starts the foreground service. */
     fun start(context: Context, request: RestRequest) {
@@ -46,6 +77,18 @@ object RestTimer {
 
     /** The current rest, or null when none. The UI reads this when it comes back to the front. */
     fun state(context: Context): RestState? = RestTimerStore(context).load()
+
+    /** [state] as it changes; the screens only redraw from it, nothing is counted by them. */
+    fun observe(context: Context): Flow<RestState?> = RestTimerStore(context).observe()
+
+    /** The app saw the end of the rest ("Abrir" in the done pill): drops it and its heads-up. */
+    fun dismissFinished(context: Context) {
+        val store = RestTimerStore(context)
+        if (store.load()?.finished != true) return
+        store.clear()
+        RestNotifications(context).cancelDone()
+        Log.i(RestLog.TAG, "finished rest dismissed in the app")
+    }
 
     /** −15 s / +15 s / +30 s. Never below zero; at zero the rest ends right away. */
     fun adjust(context: Context, deltaMs: Long) {

@@ -110,10 +110,9 @@ de canal, `CATEGORY_ALARM`, ações +30s e Abrir, título "Hora da série 2", te
 
 - A tela de spike (hoje `debug/TimerSpikeScreen.kt`) atualiza o texto a cada 250 ms só para a tela; o timer não
   depende dela. Ela some na Fase 3.
-- O botão "Registrar série" existe como `RestNotifications.logSetAction()` e a ação
-  `ACTION_LOG_SET` chega ao `RestTimer.setLogHandler`, que hoje só registra no log. Ele não
-  aparece durante o descanso porque a notificação mostra no máximo três ações (−15s, +15s,
-  Pular); o lugar dele é a notificação "entre séries" da Fase 4.
+- O botão "Registrar série" (`RestNotifications.logSetAction()`, `ACTION_LOG_SET`) ficou na
+  notificação "entre séries" da Fase 4 e grava no Room pelo `RestTimer.setLogHandler`. Durante o
+  descanso ele não aparece: a notificação mostra no máximo três ações (−15s, +15s, Pular).
 - O ícone do app ainda é o padrão do Android (a notificação usa um haltere vetorial em
   `ic_notification`). Ícone de verdade na Fase 1/3.
 - `am start-foreground-service` via adb não serve: serviço e receivers não são exportados.
@@ -168,3 +167,13 @@ Instalar o APK de debug (`adb install -r`) e fazer, nesta ordem:
    registrar agendado/disparou/atraso no logcat (`-s Treino/Timer`), como na tabela acima.
 8. **App sem abrir por dias.** O risco da Samsung visto no zazen (app em "sono profundo" cancela
    alarmes). Não reproduzível no teste; ficar de olho no uso real.
+9. **Notificação entre séries (Fase 4).** Começar um treino, registrar uma série e pular o descanso.
+   Na cortina e na tela bloqueada deve aparecer "Superior B, 1/16" com o cronômetro subindo e
+   "A seguir: ...". Ver se a One UI a promove (Now Bar) mesmo sem serviço em primeiro plano, e se
+   ela continua lá depois de 30 min com a tela apagada (a One UI pode limpar notificações ongoing de
+   apps em segundo plano).
+10. **"Registrar série" com o app fechado.** Tirar o app dos recentes, tocar "Registrar série" na
+    tela bloqueada sem desbloquear. Esperado: a série aparece no app, o descanso seguinte começa e a
+    contagem aparece. Se a One UI pedir desbloqueio para a ação, anotar aqui.
+11. **Fim do descanso com o app aberto.** Deixar um descanso acabar com o Hoje na tela: toca e vibra,
+    aparece "Hora da série N" no app e nenhum heads-up por cima.

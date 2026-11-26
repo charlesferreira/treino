@@ -5,7 +5,8 @@ package dev.charlesferreira.treino.timer
  * the Phase 0 spike screen passes sample data.
  *
  * [setNumber]/[setCount] describe the set that comes after the rest ("série 2 de 2"), and
- * [target] is its prefilled load and reps ("16 kg × 10").
+ * [target] is its prefilled load and reps ("16 kg × 10"). The app's rest screens also show
+ * [nextShort] ("16 × 10") and the set just logged ([loggedLabel] "Série 1", [loggedValue] "16 × 11").
  */
 data class RestRequest(
     val durationMs: Long,
@@ -15,6 +16,9 @@ data class RestRequest(
     val setCount: Int,
     val target: String,
     val progress: WorkoutProgress,
+    val nextShort: String = target,
+    val loggedLabel: String = "",
+    val loggedValue: String = "",
 ) {
     init {
         require(durationMs > 0) { "durationMs must be positive" }
@@ -46,7 +50,16 @@ data class RestState(
     val target: String,
     val progress: WorkoutProgress,
     val finished: Boolean,
+    val nextShort: String = target,
+    val loggedLabel: String = "",
+    val loggedValue: String = "",
 ) {
+    /** When the rest began; an adjust moves the end and the total together, so this stays put. */
+    val startedAtMs: Long get() = endsAtMs - totalMs
+
+    /** Remaining over total, 1 at the start and 0 at the end (the ring's arc). */
+    fun fraction(nowMs: Long): Float = if (totalMs <= 0) 0f else (remainingMs(nowMs).toFloat() / totalMs).coerceIn(0f, 1f)
+
     val setLabel: String get() = "série $setNumber de $setCount"
 
     fun remainingMs(nowMs: Long): Long = (endsAtMs - nowMs).coerceAtLeast(0)
@@ -62,6 +75,9 @@ data class RestState(
             target = request.target,
             progress = request.progress,
             finished = false,
+            nextShort = request.nextShort,
+            loggedLabel = request.loggedLabel,
+            loggedValue = request.loggedValue,
         )
     }
 }

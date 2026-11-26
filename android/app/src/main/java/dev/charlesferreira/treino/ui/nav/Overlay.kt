@@ -15,6 +15,10 @@ import androidx.compose.runtime.staticCompositionLocalOf
 class OverlayHost {
     var content: (@Composable () -> Unit)? by mutableStateOf(null)
         internal set
+
+    /** The rest (pill or expanded sheet): above the tab bar, below the sheets. */
+    var floating: (@Composable () -> Unit)? by mutableStateOf(null)
+        internal set
 }
 
 val LocalOverlayHost = staticCompositionLocalOf { OverlayHost() }
@@ -28,5 +32,17 @@ fun Overlay(content: @Composable () -> Unit) {
         val shown: @Composable () -> Unit = { latest() }
         host.content = shown
         onDispose { if (host.content === shown) host.content = null }
+    }
+}
+
+/** Shows [content] in the floating layer (the rest) while this is in the composition. */
+@Composable
+fun FloatingOverlay(content: @Composable () -> Unit) {
+    val host = LocalOverlayHost.current
+    val latest by rememberUpdatedState(content)
+    DisposableEffect(host) {
+        val shown: @Composable () -> Unit = { latest() }
+        host.floating = shown
+        onDispose { if (host.floating === shown) host.floating = null }
     }
 }

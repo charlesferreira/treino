@@ -9,7 +9,11 @@ import dev.charlesferreira.treino.data.SettingsStore
 import dev.charlesferreira.treino.data.TimerSwitches
 import dev.charlesferreira.treino.data.TreinoDatabase
 import dev.charlesferreira.treino.data.TreinoRepository
+import dev.charlesferreira.treino.timer.RestNotifications
+import dev.charlesferreira.treino.timer.RestOverHandler
 import dev.charlesferreira.treino.timer.RestTimer
+import dev.charlesferreira.treino.timer.SetLogHandler
+import dev.charlesferreira.treino.workout.WorkoutTimer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,6 +41,8 @@ class AppContainer(context: Context) {
     }
 
     val repository: TreinoRepository by lazy { TreinoRepository(database, settings) }
+
+    val workoutTimer: WorkoutTimer by lazy { WorkoutTimer(app, repository) }
 }
 
 class TreinoApp : Application() {
@@ -48,6 +54,11 @@ class TreinoApp : Application() {
         container = AppContainer(this)
         // The timer keeps its own copy of the switches (receivers read it in a fresh process).
         container.appScope.launch { container.settings.syncTimer() }
+        // Set here, so a notification button in a fresh process finds them.
+        RestNotifications(this).createChannels()
+        RestTimer.setLogHandler = SetLogHandler { _, _ -> container.workoutTimer.logNextFromNotification() }
+        RestTimer.restOverHandler = RestOverHandler { container.workoutTimer.refreshNotification() }
+        container.workoutTimer.watch(container.appScope)
     }
 }
 

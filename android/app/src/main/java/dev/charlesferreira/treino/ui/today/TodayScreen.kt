@@ -1,6 +1,14 @@
 package dev.charlesferreira.treino.ui.today
 
+import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LifecycleResumeEffect
+import androidx.compose.ui.unit.dp
 import android.content.Context
 import android.content.ContextWrapper
 import android.view.WindowManager
@@ -30,16 +38,37 @@ fun TodayScreen(
     onSummary: (String) -> Unit,
 ) {
     val container = appContainer()
-    val vm = viewModel { TodayViewModel(container.repository) }
+    val context = LocalContext.current
+    val vm = viewModel { TodayViewModel(container.repository, container.workoutTimer, context.applicationContext) }
     val state by vm.state.collectAsStateWithLifecycle()
     val sheet by vm.sheet.collectAsStateWithLifecycle()
     val edits by vm.edits.collectAsStateWithLifecycle()
     val timeDrafts by vm.timeDrafts.collectAsStateWithLifecycle()
+    val rest by vm.rest.collectAsStateWithLifecycle()
+    val restExpanded by vm.restExpanded.collectAsStateWithLifecycle()
+    // Back from the background: the rest is read again from the store.
+    LifecycleResumeEffect(vm) {
+        vm.reloadRest()
+        onPauseOrDispose { }
+    }
+    // The rest and the between-sets notification need the permission; asked when the workout starts.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val ui = state ?: return
 
     if (ui.started && ui.workout != null) {
         val running = !ui.ended
         KeepScreenOn(running && ui.keepScreenOn)
+        val restView = if (running) restView(rest, restExpanded, System.currentTimeMillis()) else RestView.NONE
+        val restActions = remember(vm) {
+            object : RestActions {
+                override fun onAdjust(deltaMs: Long) = vm.adjustRest(deltaMs)
+                override fun onSkip() = vm.skipRest()
+                override fun onMinimize() = vm.expandRest(false)
+                override fun onExpand() = vm.expandRest(true)
+                override fun onDoneSeen() = vm.restDoneSeen()
+            }
+        }
+        RestLayer(restView, rest, restActions)
         val clock = workoutClock(ui.session?.startedAt, ui.session?.endedAt)
         val actions = remember(vm) {
             object : WorkoutActions {
@@ -64,6 +93,7 @@ fun TodayScreen(
             setDraft = { item -> edits[item.draftKey()] ?: item.defaultSetDraft(ui.session?.id) },
             timeDraft = { item -> timeDrafts[item.draftKey()] ?: item.defaultTimeDraft() },
             actions = actions,
+            bottomExtra = if (restView == RestView.PILL || restView == RestView.DONE) RestPillClearance else 0.dp,
         )
     } else {
         StartScreen(
@@ -71,7 +101,14 @@ fun TodayScreen(
             onSwitch = { vm.openSheet(TodaySheet.Switch) },
             onProfile = onProfile,
             onNote = { vm.openSheet(TodaySheet.Note) },
-            onStart = vm::start,
+            onStart = {
+                if (Build.VERSION.SDK_INT >= 33 &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+                vm.start()
+            },
             onCreateWorkout = onCreateWorkout,
         )
     }

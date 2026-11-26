@@ -11,6 +11,7 @@ import android.os.Looper
 import android.os.PowerManager
 import android.util.Log
 import dev.charlesferreira.treino.R
+import kotlinx.coroutines.launch
 
 /**
  * Foreground service for the duration of a rest. It owns the ongoing notification and the
@@ -47,6 +48,7 @@ class RestTimerService : Service() {
                     val state = RestState.start(request, now)
                     store.save(state)
                     notifications.cancelDone()
+                    notifications.cancelWorkout()
                     goForeground(notifications.ongoing(state))
                     alarms.schedule(state.endsAtMs)
                     Log.i(RestLog.TAG, "rest started: ${request.durationMs} ms, ends ${RestLog.time(state.endsAtMs)}")
@@ -95,6 +97,7 @@ class RestTimerService : Service() {
                 ring(state, now)
             }
             else -> {
+                notifications.cancelWorkout()
                 goForeground(notifications.ongoing(state))
                 alarms.schedule(state.endsAtMs)
                 Log.i(RestLog.TAG, "restored rest, ends ${RestLog.time(state.endsAtMs)}")
@@ -118,14 +121,30 @@ class RestTimerService : Service() {
         alarms.cancel()
         // A plain heads-up. Posting it as the FGS notification (to get setColorized honored) was tried
         // on the emulator: still not colorized, and it was left non-dismissible. See docs/SPIKE.md.
-        notifications.notifyDone(finished)
+        // With the app on screen the done pill shows it instead of a heads-up over the app.
+        if (RestTimer.appInForeground) Log.i(RestLog.TAG, "app in foreground: no heads-up")
+        else notifications.notifyDone(finished)
         if (store.vibrationEnabled) RestVibrator(this).vibrate()
+        // The between-sets notification replaces the rest one.
+        val over = RestTimer.handlerScope.launch {
+            runCatching { RestTimer.restOverHandler.onRestOver(applicationContext) }
+                .onFailure { Log.e(RestLog.TAG, "rest over handler failed", it) }
+        }
         val end = {
             ringing = false
-            if (lock.isHeld) lock.release()
             // The heads-up stays; the ongoing notification goes with the service.
-            stopForeground(STOP_FOREGROUND_REMOVE)
-            stopSelf()
+            over.invokeOnCompletion {
+                main.post {
+                    if (lock.isHeld) lock.release()
+                    // A rest started while ringing ("Registrar série") keeps the service.
+                    val next = store.load()
+                    if (!ringing && (next == null || next.finished)) {
+                        stopForeground(STOP_FOREGROUND_REMOVE)
+                        stopSelf()
+                    }
+                }
+            }
+            Unit
         }
         if (store.soundEnabled) {
             RestSound(this).play { main.post(end) }
@@ -167,6 +186,9 @@ class RestTimerService : Service() {
         private const val EXTRA_TARGET = "target"
         private const val EXTRA_PLAN = "plan"
         private const val EXTRA_SETS_DONE = "sets_done"
+        private const val EXTRA_NEXT_SHORT = "next_short"
+        private const val EXTRA_LOGGED_LABEL = "logged_label"
+        private const val EXTRA_LOGGED_VALUE = "logged_value"
 
         fun startIntent(context: Context, r: RestRequest): Intent =
             Intent(context, RestTimerService::class.java).setAction(ACTION_START)
@@ -178,6 +200,9 @@ class RestTimerService : Service() {
                 .putExtra(EXTRA_TARGET, r.target)
                 .putExtra(EXTRA_PLAN, RestProgress.encode(r.progress.setsPerExercise))
                 .putExtra(EXTRA_SETS_DONE, r.progress.setsDone)
+                .putExtra(EXTRA_NEXT_SHORT, r.nextShort)
+                .putExtra(EXTRA_LOGGED_LABEL, r.loggedLabel)
+                .putExtra(EXTRA_LOGGED_VALUE, r.loggedValue)
 
         fun doneIntent(context: Context): Intent =
             Intent(context, RestTimerService::class.java).setAction(ACTION_DONE)
@@ -197,6 +222,9 @@ class RestTimerService : Service() {
                     RestProgress.decode(intent.getStringExtra(EXTRA_PLAN)),
                     intent.getIntExtra(EXTRA_SETS_DONE, 0),
                 ),
+                nextShort = intent.getStringExtra(EXTRA_NEXT_SHORT) ?: intent.getStringExtra(EXTRA_TARGET).orEmpty(),
+                loggedLabel = intent.getStringExtra(EXTRA_LOGGED_LABEL).orEmpty(),
+                loggedValue = intent.getStringExtra(EXTRA_LOGGED_VALUE).orEmpty(),
             )
         }.getOrNull()
     }

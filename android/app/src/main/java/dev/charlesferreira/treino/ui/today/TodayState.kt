@@ -63,7 +63,7 @@ data class TodayUi(
     /** The workout's last executed day before today ("último em 19 nov"). */
     val lastDoneDate: String?,
     val switchOptions: List<SwitchOption>,
-    /** The exercise card: the one picked, or the first not complete. Null when all are done. */
+    /** The exercise card: the one picked, else [followUp]. Null when all are done. */
     val current: ItemUi?,
 ) {
     /** In progress: started, or something was already logged today. */
@@ -143,8 +143,21 @@ fun buildToday(input: TodayInput): TodayUi {
                 ),
             )
         },
-        current = selected ?: items.firstOrNull { !it.complete },
+        current = selected ?: followUp(items),
     )
+}
+
+/**
+ * The exercise that comes next when none is picked: the one of the set logged last while it has
+ * sets left, else the first not complete. The rest and the notification use the same rule
+ * ([nextUp]), so the card, the rest and "Registrar série" agree.
+ */
+fun followUp(items: List<ItemUi>): ItemUi? {
+    val lastLogged = items
+        .flatMap { ui -> ui.sets.map { ui to (it.loggedAt ?: 0L) } + ui.times.map { ui to (it.loggedAt ?: 0L) } }
+        .maxByOrNull { it.second }
+        ?.first
+    return lastLogged?.takeIf { !it.complete } ?: items.firstOrNull { !it.complete }
 }
 
 /** "3 × 8–12"; a time item done once shows only the range ("30–40 min"). */

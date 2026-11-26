@@ -17,6 +17,15 @@ import dev.charlesferreira.treino.R
  * countdown chronometer the system ticks by itself) and the heads-up at the end (high channel,
  * no channel sound: the sound is ours).
  */
+/** What the between-sets notification shows. [next] is "A seguir: Rosca martelo, série 2 de 2, 16 × 10". */
+data class WorkoutOngoing(
+    val workoutName: String,
+    val startedAtMs: Long,
+    val progress: WorkoutProgress,
+    val next: String,
+    val canLog: Boolean,
+)
+
 class RestNotifications(private val context: Context) {
 
     private val manager = context.getSystemService(NotificationManager::class.java)
@@ -80,11 +89,37 @@ class RestNotifications(private val context: Context) {
         return builder.build()
     }
 
-    /**
-     * Phase 4 hook: the "between sets" ongoing notification gets this action. During the rest the
-     * three slots are −15s, +15s and Pular, so it is not shown in Phase 0.
-     */
+    /** "Registrar série": logs the next set from the notification and starts the next rest. */
     fun logSetAction(): Notification.Action = action("Registrar série", RestActionReceiver.ACTION_LOG_SET)
+
+    /**
+     * Between sets (`android-shade`, "Entre séries"): the workout, X/Y sets, the workout clock counting
+     * up from the start, and the next set. A plain ongoing notification, not a foreground service:
+     * "Registrar série" is a broadcast that works with the app closed (see docs/PROGRESS.md).
+     */
+    fun workout(info: WorkoutOngoing): Notification {
+        val builder = Notification.Builder(context, CHANNEL_REST)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ORANGE)
+            .setContentTitle("${info.workoutName}, ${info.progress.setsDone}/${info.progress.totalSets}")
+            .setContentText(info.next)
+            .setContentIntent(openIntent())
+            .setOngoing(true)
+            .setOnlyAlertOnce(true)
+            .setCategory(if (Build.VERSION.SDK_INT >= 31) Notification.CATEGORY_WORKOUT else Notification.CATEGORY_PROGRESS)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setShowWhen(true)
+            .setWhen(info.startedAtMs)
+            .setUsesChronometer(true)
+        if (info.canLog) builder.addAction(logSetAction())
+        builder.addAction(Notification.Action.Builder(null, "Abrir", openIntent()).build())
+        applyProgress(builder, info.progress, promote = true)
+        return builder.build()
+    }
+
+    fun notifyWorkout(info: WorkoutOngoing) = manager.notify(ID_WORKOUT, workout(info))
+
+    fun cancelWorkout() = manager.cancel(ID_WORKOUT)
 
     fun notifyOngoing(state: RestState) = manager.notify(ID_REST, ongoing(state))
 
@@ -153,6 +188,7 @@ class RestNotifications(private val context: Context) {
         const val CHANNEL_DONE = "rest_done"
         const val ID_REST = 1
         const val ID_DONE = 2
+        const val ID_WORKOUT = 3
         const val ORANGE = 0xFFFF7A45.toInt()
         private const val REQUEST_OPEN = 1
         private const val DONE_TIMEOUT_MS = 10 * 60_000L

@@ -22,9 +22,13 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     com o cabeçalho ligado à rolagem, editar série, exercício de tempo, resumo. Testes puros do
     cabeçalho (0, 50 e 100%), do estado do Hoje e do resumo. Conferido no AVD "Treino" contra o
     PNG de cada design.
-  - [ ] Hoje: descanso expandido, em pílula e no fim (ligado ao timer)
+  - [x] Hoje: descanso expandido, em pílula e no fim (`ui/today/RestViews.kt`), ligado ao timer.
+    Conferido no AVD "Treino" contra `b-rest`, `b-rest-pill` e `b-rest-done`.
   - [ ] Evolução, Treinos, Perfil
-- [ ] Fase 4: telas ligadas ao timer
+- [x] Fase 4: timer de verdade. `workout/WorkoutTimer.kt` liga o Room ao timer; regras puras em
+  `ui/today/RestPlan.kt` (testes em `RestPlanTest`). No AVD: alarme com a tela apagada disparou 10 ms
+  depois do agendado; "Registrar série" na cortina com o processo morto gravou a série no Room e
+  começou o descanso seguinte; −15s, +15s e Pular da cortina e do app ficam em sincronia.
 
 ## Decisões tomadas sozinho
 
@@ -88,7 +92,39 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
 - `SampleData` (debug) agora cria duas sessões passadas do Superior B (14 e 7 dias antes) e um
   treino "Corrida Z2" com uma corrida 6 dias antes.
 
+- Fase 4, descanso:
+  - O descanso começa em `onSetLogged` (`WorkoutTimer.afterSetLogged`): lê o Hoje de novo do Room e
+    monta o `RestRequest` (`restAfterLog`). Sem descanso quando o item tem 0 s ou foi a última série
+    do treino; nesse caso um descanso que ainda estava na tela é encerrado.
+  - "Próxima série" tem uma regra só (`followUp`): o exercício da última série registrada enquanto
+    tiver séries, senão o primeiro não completo. O cartão do treino (sem exercício escolhido), a
+    folha de descanso e a notificação usam a mesma, então o que a notificação mostra é o que
+    "Registrar série" grava (a carga e as reps do pré-preenchimento, `defaultSetDraft`).
+  - O store guarda também os textos do app (`nextShort` "16 × 10", `loggedLabel` "Série 1",
+    `loggedValue` "16 × 11"). O cabeçalho da folha mostra o exercício da próxima série; quando o
+    exercício muda, a linha registrada vira "Puxada, série 3".
+  - Expandido x pílula: um descanso que começa com o Hoje aberto abre expandido; um que já corria
+    quando o Hoje abriu aparece em pílula. Minimizar: chevron, toque fora ou voltar. A pílula e o
+    fim só aparecem no Hoje (as outras abas ainda são provisórias).
+  - Fim dentro do app: "Hora da série N" fica até tocar (Abrir limpa o store e o heads-up), até a
+    próxima série, ou 10 min. Com o app na frente o serviço toca som e vibração mas não posta o
+    heads-up (`RestTimer.appInForeground`, ligado no `onResume`/`onPause`).
+  - Notificação entre séries (`RestNotifications.workout`, id 3, canal `rest`): treino, X/Y, cronômetro
+    subindo desde `startedAt`, "A seguir: ...", ações "Registrar série" e "Abrir". **Não mantém o
+    serviço em primeiro plano**: é uma notificação comum ongoing. O botão é um broadcast, que sobe o
+    processo mesmo com o app fechado; o receiver grava com `goAsync` e o toque na notificação dá a
+    isenção para iniciar o FGS do descanso seguinte (visto no AVD com o processo morto). Some quando
+    o treino termina; num treino só com tempo pendente ou tudo feito ela fica, sem o botão. No
+    Android 14+ o usuário pode dispensá-la; ela volta na próxima mudança.
+  - Quem atualiza essa notificação: um coletor no `Application` (Room + store, debounce 300 ms) e,
+    por garantia, os ganchos `RestTimer.restOverHandler` (Pular e fim do alerta) e o handler do
+    "Registrar série", que rodam fora da thread principal.
+  - Durante o descanso continuam só −15s, +15s e Pular (limite de 3 ações); "Registrar série" fica
+    na notificação entre séries, que aparece junto com o heads-up do fim.
+  - "Terminar treino" encerra o descanso em andamento.
+  - Permissão de notificação pedida no "Começar treino".
+
 ## Próximo passo
 
-Descanso (Fase 3 `b-rest*` e Fase 4): começar em `TodayViewModel.onSetLogged`, onde está o TODO.
-Depois Evolução, Treinos e Perfil; a Fase 2 (tela de backup) continua pendente.
+Evolução, Treinos e Perfil (Fase 3); a Fase 2 (tela de backup) continua pendente. A Fase 4 ainda
+precisa do S23 (`SPIKE.md`, "Para testar no S23", itens 9 a 11).
