@@ -1,6 +1,30 @@
 package dev.charlesferreira.treino.ui.today
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.Animatable
+import androidx.compose.ui.platform.LocalView
+import android.view.HapticFeedbackConstants
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInWindow
+import kotlin.math.abs
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -80,6 +104,8 @@ import dev.charlesferreira.treino.ui.workouts.DangerColor
 interface WorkoutActions {
     fun onSwitch()
     fun onProfile()
+    /** ⋮ of the workout under way: note, switch, add an exercise, end, delete the day. */
+    fun onMenu()
     fun onSelect(item: ItemUi)
     fun onStepWeight(item: ItemUi, up: Boolean)
     fun onStepReps(item: ItemUi, up: Boolean)
@@ -90,9 +116,10 @@ interface WorkoutActions {
     fun onEditTime(item: ItemUi, draft: (TimeDraft) -> TimeDraft)
     fun onLogTime(item: ItemUi, draft: TimeDraft)
     fun onEditLoggedTime(id: String)
+    /** "Terminar treino", or "Ver resumo" once it ended. */
     fun onFinish()
-    fun onStartAnother()
-    fun onDelete()
+    /** A tap on the open exercise's name: its last sessions, without leaving the workout. */
+    fun onHistory(item: ItemUi)
 }
 
 /**
@@ -116,11 +143,11 @@ fun WorkoutScreen(
     val status = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val statusOffset = status - HeaderScroll.DESIGN_STATUS_DP.dp
     val ime = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
-    // The exercise open when the screen comes up just shows; later ones unfold (see [OpenExercise]).
-    var settled by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { settled = true }
+    val anchor = remember { ItemAnchor() }
+    val clearance = maxOf(TabBarDefaults.contentClearance() + bottomExtra, ime + 12.dp)
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
+        val viewport = maxHeight
         Column(
             Modifier
                 .fillMaxSize()
@@ -132,38 +159,48 @@ fun WorkoutScreen(
                     start = 14.dp,
                     end = 14.dp,
                     top = statusOffset + HeaderScroll.CONTENT_TOP_DP.dp,
-                    bottom = maxOf(TabBarDefaults.contentClearance() + bottomExtra, ime + 12.dp),
+                    bottom = clearance,
                 ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             val current = ui.current
-            // The workout's order never changes: the exercises around the open one stay as compact
-            // rows (done with the check, the rest with the number), and only the one tapped opens,
-            // in its place, like an accordion.
-            segments(ui.items, current).forEach { segment ->
-                when (segment) {
-                    is Segment.Rows -> key(segment.items.first().item.id) {
-                        CompactList(segment.items, actions::onSelect) { item -> CompactRow(item) }
-                    }
-                    is Segment.Open -> key(segment.item.item.id) {
-                        OpenExercise(segment.item, animate = settled) {
-                            if (segment.item.isTime) {
-                                TimeExerciseCard(segment.item, timeDraft(segment.item), actions)
+            // The workout's order never changes. Each exercise is one element that turns from a
+            // compact row into its card and back, so the one closing and the one opening move at
+            // the same time; neighbouring rows join into one card. After the end nothing opens.
+            val openId = if (ui.ended) null else current?.item?.id
+            Column {
+                ui.items.forEachIndexed { i, item ->
+                    key(item.item.id) {
+                        val open = item.item.id == openId
+                        val prevClosed = i > 0 && ui.items[i - 1].item.id != openId
+                        val nextClosed = i < ui.items.lastIndex && ui.items[i + 1].item.id != openId
+                        WorkoutItem(
+                            open = open,
+                            first = i == 0,
+                            joinedAbove = !open && prevClosed,
+                            joinedBelow = !open && nextClosed,
+                            track = { top, height -> anchor.place(item.item.id, top, height) },
+                            row = {
+                                CompactRowBox(enabled = !ui.ended, onClick = { actions.onSelect(item) }) { CompactRow(item) }
+                            },
+                        ) {
+                            if (item.isTime) {
+                                TimeExerciseCard(item, timeDraft(item), actions)
                             } else {
-                                CurrentExerciseCard(segment.item, setDraft(segment.item), ui.session?.id, actions)
+                                CurrentExerciseCard(item, setDraft(item), ui.session?.id, actions)
                             }
                         }
                     }
                 }
             }
+            KeepOpenInView(openId, anchor, scroll, viewport = viewport, top = status + HEADER_CLEARANCE, bottom = clearance)
+            // Not in the design: one action at the end of the list. Deleting the day and starting
+            // another live in the ⋮ and in the summary, away from the path of a set.
             when {
-                ui.ended -> GhostButton("Ver resumo", onClick = actions::onFinish)
+                ui.ended -> PrimaryButton("Ver resumo", onClick = actions::onFinish)
                 current == null -> PrimaryButton("Terminar treino", onClick = actions::onFinish, icon = TreinoIcons.Check)
                 else -> GhostButton("Terminar treino", onClick = actions::onFinish)
             }
-            // Not in the design: the smallest fit, at the end of the list.
-            if (ui.ended) GhostButton("Começar outro treino", onClick = actions::onStartAnother)
-            GhostButton("Apagar treino de hoje", onClick = actions::onDelete, contentColor = DangerColor)
         }
         WorkoutHeader(
             v = v,
@@ -175,30 +212,10 @@ fun WorkoutScreen(
             progress = ui.progress,
             profileName = ui.profileName,
             onSwitch = actions::onSwitch,
-            onProfile = actions::onProfile,
+            onProfile = if (ui.ended) actions::onProfile else actions::onMenu,
+            menu = !ui.ended,
         )
     }
-}
-
-/** The workout in order: runs of compact rows around the open exercise. */
-private sealed interface Segment {
-    data class Rows(val items: List<ItemUi>) : Segment
-    data class Open(val item: ItemUi) : Segment
-}
-
-private fun segments(items: List<ItemUi>, open: ItemUi?): List<Segment> {
-    val out = mutableListOf<Segment>()
-    val run = mutableListOf<ItemUi>()
-    for (item in items) {
-        if (item.item.id == open?.item?.id) {
-            if (run.isNotEmpty()) out += Segment.Rows(run.toList()).also { run.clear() }
-            out += Segment.Open(item)
-        } else {
-            run += item
-        }
-    }
-    if (run.isNotEmpty()) out += Segment.Rows(run.toList())
-    return out
 }
 
 /** A closed exercise: the check and the logged sets when done; else its number and target or "1/3". */
@@ -225,54 +242,146 @@ private fun RowScope.CompactRow(item: ItemUi) {
     }
 }
 
+/** Where each exercise sat at the last layout (top in the window and height, in px). */
+internal class ItemAnchor {
+    private val tops = HashMap<String, Float>()
+    private val heights = HashMap<String, Int>()
+    fun place(id: String, top: Float, height: Int) {
+        tops[id] = top
+        heights[id] = height
+    }
+    fun top(id: String): Float? = tops[id]
+    fun height(id: String): Int? = heights[id]
+}
+
 /**
- * The open exercise. When it opens after the screen is up (a tap, or the next one after the last
- * set) it unfolds from its row (a short expand and fade) and scrolls into view below the collapsed
- * header, since the one that closed above it may have pulled the list up.
+ * When the open exercise changes, the one tapped (or the next after the last set) stays where it
+ * was on screen while the cards resize, then the list scrolls only if its card does not fit
+ * between the collapsed header ([top]) and the bottom clearance.
  */
 @Composable
-private fun OpenExercise(item: ItemUi, animate: Boolean, content: @Composable () -> Unit) {
-    // Decided once, when this exercise opens: [animate] turns true right after the first frame.
-    val unfold = remember { animate }
-    val visible = remember { MutableTransitionState(!unfold).apply { targetState = true } }
-    val bring = remember { BringIntoViewRequester() }
-    var height by remember { mutableIntStateOf(0) }
-    val above = with(LocalDensity.current) { HEADER_CLEARANCE.toPx() }
-    if (unfold) {
-        LaunchedEffect(item.item.id) {
-            delay(OPEN_MS.toLong() + 20)
-            bring.bringIntoView(Rect(0f, -above, 1f, height.toFloat()))
+private fun KeepOpenInView(openId: String?, anchor: ItemAnchor, scroll: ScrollState, viewport: Dp, top: Dp, bottom: Dp) {
+    // Read during composition, so it is the place from the layout before the change.
+    val from = remember(openId) { openId?.let(anchor::top) }
+    val density = LocalDensity.current
+    LaunchedEffect(openId) {
+        val id = openId ?: return@LaunchedEffect
+        val start = from ?: return@LaunchedEffect
+        val began = System.nanoTime()
+        while (System.nanoTime() - began < (OPEN_MS + 40) * 1_000_000L) {
+            withFrameNanos { }
+            val now = anchor.top(id) ?: break
+            val drift = now - start
+            if (abs(drift) > 0.5f) scroll.scrollBy(drift)
+        }
+        val y = anchor.top(id) ?: return@LaunchedEffect
+        val h = anchor.height(id) ?: return@LaunchedEffect
+        with(density) {
+            val minTop = top.toPx()
+            val maxBottom = (viewport - bottom).toPx()
+            val by = when {
+                y < minTop -> y - minTop
+                y + h > maxBottom -> minOf(y + h - maxBottom, y - minTop)
+                else -> 0f
+            }
+            if (by != 0f) scroll.animateScrollBy(by, tween(OPEN_MS, easing = FastOutSlowInEasing))
         }
     }
-    AnimatedVisibility(
-        visibleState = visible,
-        modifier = Modifier.bringIntoViewRequester(bring).onSizeChanged { height = it.height },
-        enter = expandVertically(tween(OPEN_MS), expandFrom = Alignment.Top) + fadeIn(tween(OPEN_MS)),
-    ) { content() }
+}
+
+/**
+ * One exercise of the list. Closed it is a 52 dp row; rows next to each other join into one card
+ * (square corners and an inset divider where they meet). Open it is the card with the accent
+ * border, 12 dp from its neighbours. Corners, gaps and border animate with the content.
+ */
+@Composable
+private fun WorkoutItem(
+    open: Boolean,
+    first: Boolean,
+    joinedAbove: Boolean,
+    joinedBelow: Boolean,
+    track: (top: Float, height: Int) -> Unit,
+    row: @Composable () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val spec = tween<Dp>(OPEN_MS, easing = FastOutSlowInEasing)
+    val gap by animateDpAsState(if (first || joinedAbove) 0.dp else 12.dp, spec, label = "gap")
+    val radiusTop by animateDpAsState(if (joinedAbove) 0.dp else 22.dp, spec, label = "rt")
+    val radiusBottom by animateDpAsState(if (joinedBelow) 0.dp else 22.dp, spec, label = "rb")
+    val padTop by animateDpAsState(if (open || joinedAbove) 0.dp else 6.dp, spec, label = "pt")
+    val padBottom by animateDpAsState(if (open || joinedBelow) 0.dp else 6.dp, spec, label = "pb")
+    val border by animateColorAsState(
+        if (open) TreinoColors.AccentBorder else TreinoColors.Border,
+        tween(OPEN_MS, easing = FastOutSlowInEasing),
+        label = "border",
+    )
+    val shape = RoundedCornerShape(topStart = radiusTop, topEnd = radiusTop, bottomEnd = radiusBottom, bottomStart = radiusBottom)
+    val closedState = remember { MutableTransitionState(!open) }.apply { targetState = !open }
+    val openState = remember { MutableTransitionState(open) }.apply { targetState = open }
+    Column(
+        Modifier
+            .padding(top = gap)
+            .onGloballyPositioned { track(it.positionInWindow().y, it.size.height) }
+            .clip(shape)
+            .background(TreinoColors.Card, shape)
+            .drawWithCache {
+                val stroke = 1.dp.toPx()
+                val outline = shape.createOutline(size, layoutDirection, this)
+                val inset = 16.dp.toPx()
+                onDrawWithContent {
+                    drawContent()
+                    // The edge shared with a joined neighbour is not drawn; the divider takes it.
+                    drawOutline(outline, border, style = Stroke(stroke * 2))
+                    if (joinedAbove) drawRect(TreinoColors.Card, Offset(stroke, 0f), Size(size.width - 2 * stroke, stroke))
+                    if (joinedBelow) drawRect(TreinoColors.Card, Offset(stroke, size.height - stroke), Size(size.width - 2 * stroke, stroke))
+                    if (joinedAbove) drawLine(TreinoColors.Border, Offset(inset, stroke / 2), Offset(size.width - inset, stroke / 2), stroke)
+                }
+            }
+            .padding(top = padTop, bottom = padBottom),
+    ) {
+        AnimatedVisibility(
+            visibleState = closedState,
+            enter = expandVertically(tween(OPEN_MS, easing = FastOutSlowInEasing), expandFrom = Alignment.Top) + fadeIn(tween(OPEN_MS)),
+            exit = shrinkVertically(tween(CLOSE_MS, easing = FastOutSlowInEasing), shrinkTowards = Alignment.Top) + fadeOut(tween(CLOSE_MS / 2)),
+        ) { row() }
+        AnimatedVisibility(
+            visibleState = openState,
+            enter = expandVertically(tween(OPEN_MS, easing = FastOutSlowInEasing), expandFrom = Alignment.Top) + fadeIn(tween(OPEN_MS, delayMillis = 60)),
+            exit = shrinkVertically(tween(CLOSE_MS, easing = FastOutSlowInEasing), shrinkTowards = Alignment.Top) + fadeOut(tween(CLOSE_MS / 2)),
+        ) { content() }
+    }
+}
+
+/** A closed exercise's row: 52 dp, padding 16. */
+@Composable
+private fun CompactRowBox(enabled: Boolean, onClick: () -> Unit, content: @Composable RowScope.() -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        content = content,
+    )
+}
+
+/** The open exercise's content; the frame is its [WorkoutItem]. */
+@Composable
+fun ExerciseBody(content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 18.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        content = content,
+    )
 }
 
 /** The collapsed header over the list, plus a little air. */
-private val HEADER_CLEARANCE = 120.dp
+private val HEADER_CLEARANCE = 110.dp
 
-private const val OPEN_MS = 220
-
-/** The card of exercises done (and of the ones still to do): 40 dp rows, padding 6/16. */
-@Composable
-private fun CompactList(items: List<ItemUi>, onSelect: (ItemUi) -> Unit, row: @Composable RowScope.(ItemUi) -> Unit) {
-    Card(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp)) {
-        items.forEachIndexed { i, item ->
-            if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(TreinoColors.Border))
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(40.dp)
-                    .clickable(role = Role.Button) { onSelect(item) },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) { row(item) }
-        }
-    }
-}
+private const val OPEN_MS = 250
+private const val CLOSE_MS = 200
 
 @Composable
 private fun RowScope.RowName(item: ItemUi) {
@@ -281,10 +390,16 @@ private fun RowScope.RowName(item: ItemUi) {
 
 /** Name, target and tags of the current exercise. */
 @Composable
-fun ExerciseTitle(item: ItemUi, tags: @Composable RowScope.() -> Unit) {
+fun ExerciseTitle(item: ItemUi, onName: (() -> Unit)? = null, tags: @Composable RowScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            TText(item.exercise.name, style = TreinoType.Heading, modifier = Modifier.weight(1f))
+            TText(
+                item.exercise.name,
+                style = TreinoType.Heading,
+                modifier = Modifier
+                    .weight(1f)
+                    .then(if (onName != null) Modifier.clickable(role = Role.Button, onClickLabel = "Histórico", onClick = onName) else Modifier),
+            )
             TText(item.target, style = TreinoType.mono(13.sp, color = TreinoColors.TextFaint), maxLines = 1)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), content = tags)
@@ -298,12 +413,8 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
     val next = item.nextPosition()
     val rows = maxOf(item.total, item.sets.size + 1)
     var focused by remember(item.item.id, next) { mutableStateOf(CellFocus.NONE) }
-    Card(
-        borderColor = TreinoColors.AccentBorder,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        ExerciseTitle(item) {
+    ExerciseBody {
+        ExerciseTitle(item, onName = { actions.onHistory(item) }) {
             if (exercise.countsTwoDumbbells) Tag("Halteres 2×", icon = TreinoIcons.Dumbbell)
             if (item.item.restSec > 0) Tag(restLabel(item.item.restSec))
             item.maxKg?.let { Tag("máx ${PtBr.kg(it)}") }
@@ -328,7 +439,11 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
                         Cell(PtBr.number(logged.weightKg), Modifier.width(72.dp))
                         Cell("${logged.reps}", Modifier.width(60.dp))
                         Box(Modifier.size(36.dp, 28.dp), contentAlignment = Alignment.CenterStart) {
-                            DoneMark(Modifier.padding(start = 3.dp))
+                            // The set just logged pops its check in; older ones just show.
+                            val fresh = remember(logged.id) { (logged.loggedAt ?: 0L) > System.currentTimeMillis() - 2_000 }
+                            val pop = remember(logged.id) { Animatable(if (fresh) 0.4f else 1f) }
+                            LaunchedEffect(logged.id) { if (fresh) pop.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = 500f)) }
+                            DoneMark(Modifier.padding(start = 3.dp).graphicsLayer { scaleX = pop.value; scaleY = pop.value })
                         }
                     }
                     position == next -> TableRow(
@@ -374,32 +489,47 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
                 }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Stepper(
-                value = PtBr.kg(draft.weightKg),
-                onMinus = { actions.onStepWeight(item, false) },
-                onPlus = { actions.onStepWeight(item, true) },
-                modifier = Modifier.weight(1f),
-                minusLabel = "−${stepButton(exercise)}",
-                plusLabel = "+${stepButton(exercise)}",
-                caption = stepCaption(exercise),
-                minusDescription = "Menos ${stepDescription(exercise)}",
-                plusDescription = "Mais ${stepDescription(exercise)}",
-            )
-            Stepper(
-                value = "${draft.reps}",
-                onMinus = { actions.onStepReps(item, false) },
-                onPlus = { actions.onStepReps(item, true) },
-                modifier = Modifier.weight(1f),
-                minusDescription = "Menos 1 rep",
-                plusDescription = "Mais 1 rep",
-            )
-        }
-        PrimaryButton("Registrar série ${next + 1}", onClick = { actions.onLogSet(item, draft) }, icon = TreinoIcons.Check)
+        NextSetSteppers(item, draft, onStepWeight = { actions.onStepWeight(item, it) }, onStepReps = { actions.onStepReps(item, it) })
+        val view = LocalView.current
+        PrimaryButton(
+            "Registrar série ${next + 1}",
+            onClick = {
+                view.performHapticFeedback(if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.VIRTUAL_KEY)
+                actions.onLogSet(item, draft)
+            },
+            icon = TreinoIcons.Check,
+        )
     }
 }
 
 private enum class CellFocus { NONE, WEIGHT, REPS }
+
+/** Load and reps of the next set: the card's steppers, also in the rest sheet. */
+@Composable
+fun NextSetSteppers(item: ItemUi, draft: SetDraft, onStepWeight: (up: Boolean) -> Unit, onStepReps: (up: Boolean) -> Unit) {
+    val exercise = item.exercise
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Stepper(
+            value = PtBr.kg(draft.weightKg),
+            onMinus = { onStepWeight(false) },
+            onPlus = { onStepWeight(true) },
+            modifier = Modifier.weight(1f),
+            minusLabel = "−${stepButton(exercise)}",
+            plusLabel = "+${stepButton(exercise)}",
+            caption = stepCaption(exercise),
+            minusDescription = "Menos ${stepDescription(exercise)}",
+            plusDescription = "Mais ${stepDescription(exercise)}",
+        )
+        Stepper(
+            value = "${draft.reps}",
+            onMinus = { onStepReps(false) },
+            onPlus = { onStepReps(true) },
+            modifier = Modifier.weight(1f),
+            minusDescription = "Menos 1 rep",
+            plusDescription = "Mais 1 rep",
+        )
+    }
+}
 
 /** `.tbl`: 36 | 1fr | 72 | 60 | 36, 8 dp between columns. */
 @Composable

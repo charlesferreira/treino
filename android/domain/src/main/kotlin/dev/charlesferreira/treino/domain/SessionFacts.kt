@@ -49,3 +49,28 @@ data class WorkoutProgress(val done: Int, val total: Int, val segments: List<Pro
         }
     }
 }
+
+object WorkoutMode {
+    /**
+     * Treino em andamento: começou (início gravado ou algum registro) e não terminou. Enquanto
+     * for verdade, o app inteiro é esse treino, sem a barra de abas.
+     */
+    fun running(session: Session?, hasEntries: Boolean): Boolean =
+        session != null && session.endedAt == null && (session.startedAt != null || hasEntries)
+
+    /** Três horas sem registro: o treino provavelmente acabou e ninguém tocou em Terminar. */
+    const val STALE_MS = 3 * 60 * 60 * 1000L
+
+    /** O último sinal de vida do treino: a série ou o tempo mais recente, senão o início. */
+    fun lastActivity(session: Session, sets: List<SetEntry>, times: List<TimeEntry>): Long? =
+        (sets.filter { it.sessionId == session.id }.mapNotNull { it.loggedAt } +
+            times.filter { it.sessionId == session.id }.mapNotNull { it.loggedAt })
+            .maxOrNull() ?: session.startedAt
+
+    /** Em andamento e parado há mais de [STALE_MS]: o app pergunta se ainda está treinando. */
+    fun stale(session: Session, sets: List<SetEntry>, times: List<TimeEntry>, now: Long): Boolean {
+        if (session.endedAt != null) return false
+        val last = lastActivity(session, sets, times) ?: return false
+        return now - last > STALE_MS
+    }
+}

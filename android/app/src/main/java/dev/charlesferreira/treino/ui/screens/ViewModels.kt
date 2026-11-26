@@ -18,6 +18,10 @@ import java.time.LocalDate
 class RootViewModel(repository: TreinoRepository) : ViewModel() {
     val hasData: StateFlow<Boolean?> = repository.observeHasData()
         .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
+    /** Today's workout under way: the whole app is that workout, without the tab bar. */
+    val workoutRunning: StateFlow<Boolean> = repository.observeWorkoutRunning()
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 }
 
 class OnboardingViewModel(private val repository: TreinoRepository) : ViewModel() {

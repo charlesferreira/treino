@@ -190,6 +190,34 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
 - [x] Passo por placa (26 nov): "−1 placa 20… +1 placa" cortava o valor no S23. Os botões ficaram
   "−1"/"+1" e o passo vai embaixo do valor ("20 kg" / "±1 placa"), no treino e na folha de editar série.
 
+- [x] Modo treino e revisão de design (26 nov, pedido depois de usar no S23; revisão de um designer de produto
+  aplicada). Com o treino de hoje começado e não terminado, o app inteiro é esse treino:
+  - A barra de abas some e volta depois do resumo (`WorkoutMode.running`, `observeWorkoutRunning`,
+    `LocalTabBarShown`). Uma série registrada pela notificação com outra aba aberta leva ao Hoje.
+  - O avatar vira ⋮: "Nota do dia", "Trocar treino", "Adicionar exercício" (o seletor por cima; o
+    exercício entra no treino e abre na lista), "Terminar treino" e, separado e em vermelho, "Apagar
+    treino de hoje". "Gerenciar treinos" some da folha de troca.
+  - O fim da lista tem uma ação só: "Terminar treino" (cinza com séries faltando, laranja com tudo
+    feito) ou "Ver resumo" depois do fim. "Começar outro treino" e "Apagar treino de hoje" foram
+    para o resumo, abaixo dos números. "Ver resumo" não regrava mais o fim do treino.
+  - Terminar com séries faltando pergunta ("Faltam 5 séries"); sem nenhuma série a folha oferece
+    "Descartar treino". Três horas sem registro: "Ainda treinando?", com "Terminar às 15:26" na
+    hora da última série (`WorkoutMode.stale`).
+  - Acordeão refeito: cada exercício é um elemento só (linha de 52 dp que vira cartão), então o que
+    fecha e o que abre animam juntos (200 e 250 ms, `FastOutSlowInEasing`). Linhas vizinhas se juntam
+    num cartão. A linha tocada fica parada na tela durante a troca, e a lista só rola se o cartão
+    não couber. Depois do fim nada abre e as linhas não respondem ao toque.
+  - Registrar série: vibração `CONFIRM`, o check entra com mola e a folha de descanso tem
+    "Desfazer" (apaga a série mais recente e para o descanso) e os steppers da próxima série.
+  - Tocar no nome do exercício aberto abre a folha com as últimas 6 sessões (`historyRows`), sem sair
+    do treino. Cada metade do stepper (−/+) é área de toque.
+  - Testes: `WorkoutModeTest` (domínio) e `ExerciseHistoryTest`. Conferido no AVD: abas somem e
+    voltam, ⋮, confirmação, Desfazer, steppers no descanso, adicionar exercício, histórico, resumo →
+    "Começar outro treino". Release assinado instalado por cima no S23 com os dados mantidos; a
+    tela estava bloqueada para conferir por screencap.
+  - Fica como está no design: o "Pular" só na folha de descanso (a pílula tem +15s) e o contador
+    "1/6" contando séries enquanto a barra mostra um segmento por exercício.
+
 ## Decisões tomadas sozinho
 
 - Package e applicationId `dev.charlesferreira.treino`.

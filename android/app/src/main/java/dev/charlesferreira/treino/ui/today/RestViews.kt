@@ -76,6 +76,7 @@ import dev.charlesferreira.treino.ui.components.Icon
 import dev.charlesferreira.treino.ui.components.TText
 import dev.charlesferreira.treino.ui.components.TreinoIcons
 import dev.charlesferreira.treino.ui.nav.FloatingOverlay
+import dev.charlesferreira.treino.ui.nav.LocalTabBarShown
 import dev.charlesferreira.treino.ui.nav.TabBarDefaults
 import dev.charlesferreira.treino.ui.theme.TreinoColors
 import dev.charlesferreira.treino.ui.theme.TreinoType
@@ -102,6 +103,8 @@ interface RestActions {
     fun onMinimize()
     fun onExpand()
     fun onDoneSeen()
+    /** "Desfazer" of the set that started this rest: the set goes and the rest stops. */
+    fun onUndo() {}
 }
 
 /**
@@ -110,7 +113,13 @@ interface RestActions {
  * the clock only redraws.
  */
 @Composable
-fun RestLayer(view: RestView, rest: RestState?, actions: RestActions) {
+fun RestLayer(
+    view: RestView,
+    rest: RestState?,
+    actions: RestActions,
+    /** The next set's steppers, shown in the expanded sheet so the load changes during the rest. */
+    next: (@Composable () -> Unit)? = null,
+) {
     // The last rest stays drawn while its view leaves (Pular slides the sheet down).
     val last = remember { arrayOfNulls<RestState>(1) }
     if (rest != null) last[0] = rest
@@ -141,7 +150,7 @@ fun RestLayer(view: RestView, rest: RestState?, actions: RestActions) {
                 exit = fadeOut(tween(160)),
             ) { RestDonePill(shown, actions) }
             AnimatedVisibility(visibleState = sheet, enter = EnterTransition.None, exit = ExitTransition.None) {
-                RestSheet(shown, actions)
+                RestSheet(shown, actions, next)
             }
         }
     }
@@ -180,7 +189,7 @@ private fun DrawScope.ring(radius: Float, stroke: Float, track: Color, fraction:
 /* -------------------------------------------------------------- b-rest */
 
 @Composable
-private fun AnimatedVisibilityScope.RestSheet(rest: RestState, actions: RestActions) {
+private fun AnimatedVisibilityScope.RestSheet(rest: RestState, actions: RestActions, next: (@Composable () -> Unit)?) {
     BackHandler(enabled = transition.targetState == EnterExitState.Visible, onBack = actions::onMinimize)
     val now = frameNow(running = true)
     val remaining by remember(rest) { derivedStateOf { RestMath.format(rest.remainingMs(now.value)) } }
@@ -258,7 +267,7 @@ private fun AnimatedVisibilityScope.RestSheet(rest: RestState, actions: RestActi
                 AdjustButton("Pular", filled = false, onClick = actions::onSkip)
             }
             Spacer(Modifier.weight(1f))
-            NextPanel(rest)
+            NextPanel(rest, actions::onUndo, next)
         }
     }
 }
@@ -282,7 +291,7 @@ private fun RowScope.AdjustButton(text: String, filled: Boolean, onClick: () -> 
 
 /** The set just logged and the next one, on the background color, radius 20. */
 @Composable
-private fun NextPanel(rest: RestState) {
+private fun NextPanel(rest: RestState, onUndo: () -> Unit, next: (@Composable () -> Unit)?) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -297,6 +306,14 @@ private fun NextPanel(rest: RestState) {
                 }
                 TText(rest.loggedLabel, Modifier.weight(1f), style = TreinoType.Body.copy(fontSize = 13.sp, lineHeight = 18.sp), color = TreinoColors.TextDim, maxLines = 1)
                 TText(rest.loggedValue, style = TreinoType.mono(14.sp), maxLines = 1)
+                Box(
+                    Modifier
+                        .height(32.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable(role = Role.Button, onClick = onUndo)
+                        .padding(horizontal = 10.dp),
+                    contentAlignment = Alignment.Center,
+                ) { TText("Desfazer", style = TreinoType.Body.copy(fontSize = 13.sp, fontWeight = FontWeight.W700), color = TreinoColors.AccentLight, maxLines = 1) }
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(TreinoColors.Border))
         }
@@ -308,16 +325,21 @@ private fun NextPanel(rest: RestState) {
                 style = TreinoType.Body.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.W600),
                 maxLines = 1,
             )
-            TText(rest.nextShort, style = TreinoType.mono(14.sp), maxLines = 1)
+            if (next == null) TText(rest.nextShort, style = TreinoType.mono(14.sp), maxLines = 1)
         }
+        next?.invoke()
     }
 }
 
 /* --------------------------------------------------------- b-rest-pill */
 
-/** Bottom of the pill: 12 dp above the tab bar (the design's 98 = 24 + 62 + 12). */
+/**
+ * Bottom of the pill: 12 dp above the tab bar (the design's 98 = 24 + 62 + 12); in a workout,
+ * where the bar is gone, the pill takes its place.
+ */
 @Composable
-private fun pillBottom(): Dp = TabBarDefaults.bottomOffset() + TabBarDefaults.Height + 12.dp
+private fun pillBottom(): Dp =
+    if (LocalTabBarShown.current) TabBarDefaults.bottomOffset() + TabBarDefaults.Height + 12.dp else TabBarDefaults.bottomOffset()
 
 @Composable
 private fun RestPill(rest: RestState, actions: RestActions) {

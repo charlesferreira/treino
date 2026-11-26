@@ -1,5 +1,6 @@
 package dev.charlesferreira.treino.ui.components
 
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -52,13 +53,15 @@ fun Stepper(
     caption: String? = null,
 ) {
     val shape = RoundedCornerShape(26.dp)
-    Row(
-        modifier = modifier.height(52.dp).clip(shape).background(TreinoColors.Surface, shape),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        StepperButton(minusLabel, minusDescription, minusEnabled, onMinus)
+    // Each half of the pill is its button (a sweaty thumb need not find the label); the value
+    // sits on top in the middle.
+    Box(modifier = modifier.height(52.dp).clip(shape).background(TreinoColors.Surface, shape)) {
+        Row(Modifier.matchParentSize()) {
+            StepperButton(minusLabel, minusDescription, minusEnabled, onMinus, Alignment.CenterStart, Modifier.weight(1f))
+            StepperButton(plusLabel, plusDescription, true, onPlus, Alignment.CenterEnd, Modifier.weight(1f))
+        }
         androidx.compose.foundation.layout.Column(
-            Modifier.weight(1f),
+            Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TText(value, style = TreinoType.mono(valueFontSize), textAlign = TextAlign.Center, maxLines = 1)
@@ -73,29 +76,39 @@ fun Stepper(
                 )
             }
         }
-        StepperButton(plusLabel, plusDescription, true, onPlus)
     }
 }
 
 @Composable
-private fun StepperButton(label: String, description: String?, enabled: Boolean, onClick: () -> Unit) {
-    // At least 52 dp square; a longer label ("−1 placa") widens it into a pill.
+private fun StepperButton(
+    label: String,
+    description: String?,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    side: Alignment,
+    modifier: Modifier,
+) {
+    // Half the pill; the label keeps its 52 dp slot at the edge, as before.
     Box(
-        modifier = Modifier
-            .height(52.dp)
-            .widthIn(min = 52.dp)
-            .clip(CircleShape)
+        modifier = modifier
+            .fillMaxHeight()
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier)
-            .padding(horizontal = if (label.length > 3) 12.dp else 0.dp),
-        contentAlignment = Alignment.Center,
+            .then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier),
+        contentAlignment = side,
     ) {
-        TText(
-            label,
-            style = TreinoType.Body.copy(fontSize = 14.sp, fontWeight = FontWeight.W700),
-            color = if (enabled) TreinoColors.TextSoft else TreinoColors.TextFaint,
-            maxLines = 1,
-        )
+        Box(
+            Modifier
+                .widthIn(min = 52.dp)
+                .padding(horizontal = if (label.length > 3) 12.dp else 0.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            TText(
+                label,
+                style = TreinoType.Body.copy(fontSize = 14.sp, fontWeight = FontWeight.W700),
+                color = if (enabled) TreinoColors.TextSoft else TreinoColors.TextFaint,
+                maxLines = 1,
+            )
+        }
     }
 }
 

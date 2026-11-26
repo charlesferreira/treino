@@ -18,12 +18,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dev.charlesferreira.treino.appContainer
 import dev.charlesferreira.treino.domain.SetEntry
+import dev.charlesferreira.treino.domain.WorkoutMode
 import kotlinx.coroutines.delay
 
 /**
@@ -36,6 +38,13 @@ fun TodayScreen(
     onCreateWorkout: () -> Unit,
     onManageWorkouts: () -> Unit,
     onSummary: (String) -> Unit,
+    onAddExercise: (workoutId: String) -> Unit,
+    /** Set by the summary's "Começar outro treino": opens the workout picker once. */
+    startAnother: Boolean = false,
+    onStartAnotherShown: () -> Unit = {},
+    /** An exercise just added from the ⋮: it opens in the list. */
+    openItem: String? = null,
+    onOpenItemShown: () -> Unit = {},
 ) {
     val container = appContainer()
     val context = LocalContext.current
@@ -54,6 +63,42 @@ fun TodayScreen(
     // The rest and the between-sets notification need the permission; asked when the workout starts.
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val ui = state ?: return
+    // A workout left open for hours: asked once, with the end at the last set.
+    val running = ui.started && !ui.ended
+    val latestUi by rememberUpdatedState(ui)
+    val latestSheet by rememberUpdatedState(sheet)
+    LaunchedEffect(ui.session?.id, running) {
+        val session = ui.session ?: return@LaunchedEffect
+        while (running) {
+            val sets = latestUi.items.flatMap { it.sets }
+            val times = latestUi.items.flatMap { it.times }
+            if (vm.staleAnswered != session.id && latestSheet == null && WorkoutMode.stale(session, sets, times, System.currentTimeMillis())) {
+                WorkoutMode.lastActivity(session, sets, times)?.let { vm.openSheet(TodaySheet.Stale(it)) }
+            }
+            delay(60_000)
+        }
+    }
+    LaunchedEffect(openItem) {
+        if (openItem != null) {
+            vm.selectItem(openItem)
+            onOpenItemShown()
+        }
+    }
+    LaunchedEffect(startAnother) {
+        if (startAnother) {
+            vm.openSheet(TodaySheet.StartAnother)
+            onStartAnotherShown()
+        }
+    }
+    // "Ver resumo" of a day that already ended opens it; "Terminar treino" asks first while
+    // sets are missing.
+    val finishNow by rememberUpdatedState<() -> Unit> {
+        when {
+            ui.ended -> onSummary(vm.date)
+            ui.progress.done < ui.progress.total -> vm.openSheet(TodaySheet.ConfirmFinish)
+            else -> vm.finish { onSummary(vm.date) }
+        }
+    }
 
     if (ui.started && ui.workout != null) {
         val running = !ui.ended
@@ -66,14 +111,27 @@ fun TodayScreen(
                 override fun onMinimize() = vm.expandRest(false)
                 override fun onExpand() = vm.expandRest(true)
                 override fun onDoneSeen() = vm.restDoneSeen()
+                override fun onUndo() = vm.undoLastSet()
             }
         }
-        RestLayer(restView, rest, restActions)
+        val nextItem = ui.nextUp()?.item?.takeIf { !it.isTime }
+        RestLayer(
+            restView,
+            rest,
+            restActions,
+            next = nextItem?.let { item ->
+                {
+                    val draft = edits[item.draftKey()] ?: item.defaultSetDraft(ui.session?.id)
+                    NextSetSteppers(item, draft, onStepWeight = { up -> vm.stepWeight(item, up) }, onStepReps = { up -> vm.stepReps(item, up) })
+                }
+            },
+        )
         val clock = workoutClock(ui.session?.startedAt, ui.session?.endedAt)
         val actions = remember(vm) {
             object : WorkoutActions {
                 override fun onSwitch() = vm.openSheet(TodaySheet.Switch)
                 override fun onProfile() = onProfile()
+                override fun onMenu() = vm.openSheet(TodaySheet.Menu)
                 override fun onSelect(item: ItemUi) = vm.selectItem(item.item.id)
                 override fun onStepWeight(item: ItemUi, up: Boolean) = vm.stepWeight(item, up)
                 override fun onStepReps(item: ItemUi, up: Boolean) = vm.stepReps(item, up)
@@ -84,9 +142,8 @@ fun TodayScreen(
                 override fun onEditTime(item: ItemUi, draft: (TimeDraft) -> TimeDraft) = vm.editTime(item, draft)
                 override fun onLogTime(item: ItemUi, draft: TimeDraft) = vm.onTimeLogged(item, draft)
                 override fun onEditLoggedTime(id: String) = vm.openSheet(TodaySheet.EditTime(id))
-                override fun onFinish() = vm.finish { onSummary(vm.date) }
-                override fun onStartAnother() = vm.openSheet(TodaySheet.StartAnother)
-                override fun onDelete() = vm.openSheet(TodaySheet.ConfirmDelete)
+                override fun onFinish() = finishNow()
+                override fun onHistory(item: ItemUi) = vm.openSheet(TodaySheet.History(item.exercise.id))
             }
         }
         WorkoutScreen(
@@ -119,10 +176,10 @@ fun TodayScreen(
         TodaySheet.Switch -> SwitchWorkoutSheet(
             options = ui.switchOptions,
             onChoose = vm::chooseWorkout,
-            onManage = {
+            onManage = if (ui.started && !ui.ended) null else ({
                 vm.closeSheet()
                 onManageWorkouts()
-            },
+            }),
             onDismiss = vm::closeSheet,
         )
         TodaySheet.StartAnother -> SwitchWorkoutSheet(
@@ -140,6 +197,41 @@ fun TodayScreen(
             onConfirm = vm::deleteDay,
             onDismiss = vm::closeSheet,
         )
+        TodaySheet.Menu -> WorkoutMenuSheet(
+            workoutName = ui.workout?.name.orEmpty(),
+            hasNote = !ui.session?.note.isNullOrBlank(),
+            onNote = { vm.openSheet(TodaySheet.Note) },
+            onSwitch = { vm.openSheet(TodaySheet.Switch) },
+            onAddExercise = {
+                vm.closeSheet()
+                ui.workout?.let { onAddExercise(it.id) }
+            },
+            onFinish = finishNow,
+            onDelete = { vm.openSheet(TodaySheet.ConfirmDelete) },
+            onDismiss = vm::closeSheet,
+        )
+        TodaySheet.ConfirmFinish -> FinishSheet(
+            done = ui.progress.done,
+            total = ui.progress.total,
+            onFinish = {
+                vm.closeSheet()
+                vm.finish { onSummary(vm.date) }
+            },
+            onDiscard = vm::deleteDay,
+            onDismiss = vm::closeSheet,
+        )
+        is TodaySheet.Stale -> StaleSheet(
+            lastAt = s.lastAt,
+            onFinish = {
+                vm.closeSheet()
+                vm.finish(at = s.lastAt) { onSummary(vm.date) }
+            },
+            onContinue = {
+                vm.staleAnswered = ui.session?.id
+                vm.closeSheet()
+            },
+        )
+        is TodaySheet.History -> ExerciseHistorySheet(s.exerciseId, today = vm.date, onDismiss = vm::closeSheet)
         TodaySheet.Note -> NoteSheet(ui.session?.note, onSave = vm::saveNote, onDismiss = vm::closeSheet)
         is TodaySheet.EditSet -> {
             val found = ui.items.firstNotNullOfOrNull { item -> item.sets.firstOrNull { it.id == s.setId }?.let { item to it } }

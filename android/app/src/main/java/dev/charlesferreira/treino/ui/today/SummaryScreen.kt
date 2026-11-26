@@ -1,5 +1,7 @@
 package dev.charlesferreira.treino.ui.today
 
+import dev.charlesferreira.treino.ui.workouts.DangerColor
+import dev.charlesferreira.treino.ui.components.GhostButton
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,11 +60,17 @@ import dev.charlesferreira.treino.ui.theme.TreinoType
  * the workout's previous session under it, and the exercises whose top load went up. Facts only.
  */
 @Composable
-fun SummaryScreen(date: String, onClose: () -> Unit) {
+fun SummaryScreen(
+    date: String,
+    onClose: () -> Unit,
+    /** Today only: back to Hoje with the workout picker open. */
+    onStartAnother: (() -> Unit)? = null,
+) {
     val container = appContainer()
-    val vm = viewModel(key = "summary-$date") { SummaryViewModel(container.repository, date) }
+    val vm = viewModel(key = "summary-$date") { SummaryViewModel(container.repository, container.workoutTimer, date) }
     val state by vm.state.collectAsStateWithLifecycle()
     var noteOpen by rememberSaveable { mutableStateOf(false) }
+    var deleteOpen by rememberSaveable { mutableStateOf(false) }
     val ui = state ?: return
     val nav = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val bottom = maxOf(28.dp, nav + 8.dp)
@@ -126,6 +134,13 @@ fun SummaryScreen(date: String, onClose: () -> Unit) {
                 }
             }
             if (ui.lifts.isNotEmpty()) Lifts(ui.lifts)
+            // Not in the design: what the day still allows, below the facts and away from Concluir.
+            if (onStartAnother != null) {
+                Column(Modifier.padding(top = 10.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    GhostButton("Começar outro treino", onClick = onStartAnother)
+                    TextAction("Apagar treino de hoje", color = DangerColor) { deleteOpen = true }
+                }
+            }
         }
         Row(
             Modifier
@@ -144,6 +159,17 @@ fun SummaryScreen(date: String, onClose: () -> Unit) {
             ) { TText("Nota", style = TreinoType.ButtonGhost, maxLines = 1) }
             PrimaryButton("Concluir", onClick = onClose, modifier = Modifier.weight(2f))
         }
+    }
+    if (deleteOpen) {
+        DeleteDaySheet(
+            title = "Apagar o treino de hoje?",
+            action = "Apagar treino",
+            onConfirm = {
+                deleteOpen = false
+                vm.deleteDay(onClose)
+            },
+            onDismiss = { deleteOpen = false },
+        )
     }
     if (noteOpen) {
         NoteSheet(
@@ -243,4 +269,17 @@ private fun Lifts(lifts: List<LiftUi>) {
             }
         }
     }
+}
+
+/** A plain text button: 48 dp tall, no fill. */
+@Composable
+private fun TextAction(text: String, color: Color, onClick: () -> Unit) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) { TText(text, style = TreinoType.ButtonGhost.copy(color = color, fontSize = 14.sp), maxLines = 1) }
 }

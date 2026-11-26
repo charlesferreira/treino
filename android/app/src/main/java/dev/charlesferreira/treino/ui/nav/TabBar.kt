@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,8 +61,11 @@ object TabBarDefaults {
      * gesture navigation (the design's primary button sits at 104), more with 3 buttons.
      */
     @Composable
-    fun contentClearance(): Dp = bottomOffset() + Height + 18.dp
+    fun contentClearance(): Dp = if (LocalTabBarShown.current) bottomOffset() + Height + 18.dp else bottomOffset()
 }
+
+/** False while a workout is under way: the tab bar is gone and its room is free. */
+val LocalTabBarShown = compositionLocalOf { true }
 
 /**
  * `.tabbar`: floating pill 20 dp from the sides and 24 from the bottom, 62 high, radius 31, #1F2125,

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -54,17 +55,19 @@ fun TreinoAppRoot() {
     val container = appContainer()
     val vm = viewModel { RootViewModel(container.repository) }
     val hasData by vm.hasData.collectAsStateWithLifecycle()
+    val workoutRunning by vm.workoutRunning.collectAsStateWithLifecycle()
     // The start is decided once; later changes (seeding, import) navigate explicitly.
     var start by remember { mutableStateOf<Any?>(null) }
     if (start == null) hasData?.let { start = if (it) TodayRoute else OnboardingRoute }
     Box(Modifier.fillMaxSize().background(TreinoColors.Background)) {
-        start?.let { TreinoNavHost(it) }
+        start?.let { TreinoNavHost(it, workoutRunning) }
     }
 }
 
 @Composable
-private fun TreinoNavHost(start: Any) {
+private fun TreinoNavHost(start: Any, workoutRunning: Boolean) {
     val nav = rememberNavController()
+    val container = appContainer()
     val entry by nav.currentBackStackEntryAsState()
     val destination = entry?.destination
     val tab = when {
@@ -80,7 +83,16 @@ private fun TreinoNavHost(start: Any) {
     val overlay = remember { OverlayHost() }
     val profile: () -> Unit = { nav.navigate(ProfileRoute) { launchSingleTop = true } }
 
-    CompositionLocalProvider(LocalOverlayHost provides overlay) {
+    // Workout mode: while today's workout is under way the app is that workout. Whatever else was
+    // open (a notification can log the first set with Evolução on screen) gives way to Hoje.
+    LaunchedEffect(workoutRunning) {
+        val here = nav.currentDestination
+        if (workoutRunning && here != null && !here.hasRoute<TodayRoute>() && !here.hasRoute<SummaryRoute>()) {
+            nav.navigate(TodayRoute) { popUpTo(nav.graph.id) { inclusive = true } }
+        }
+    }
+
+    CompositionLocalProvider(LocalOverlayHost provides overlay, LocalTabBarShown provides !workoutRunning) {
     Box(Modifier.fillMaxSize()) {
         NavHost(
             navController = nav,
@@ -104,12 +116,21 @@ private fun TreinoNavHost(start: Any) {
                     onBackup = { nav.navigate(BackupRoute(firstUse = true)) },
                 )
             }
-            screen<TodayRoute> {
+            screen<TodayRoute> { entry ->
+                val startAnother by entry.savedStateHandle.getStateFlow(START_ANOTHER, false).collectAsStateWithLifecycle()
+                val openItem by entry.savedStateHandle.getStateFlow<String?>(OPEN_ITEM, null).collectAsStateWithLifecycle()
                 TodayScreen(
                     onProfile = profile,
                     onCreateWorkout = { nav.selectTab(Tab.WORKOUTS) },
                     onManageWorkouts = { nav.selectTab(Tab.WORKOUTS) },
                     onSummary = { date -> nav.navigate(SummaryRoute(date)) { launchSingleTop = true } },
+                    // Mid-workout the picker adds to the workout and comes back; the new exercise
+                    // shows in the list.
+                    onAddExercise = { id -> nav.navigate(ExercisePickerRoute(id)) { launchSingleTop = true } },
+                    startAnother = startAnother,
+                    onStartAnotherShown = { entry.savedStateHandle[START_ANOTHER] = false },
+                    openItem = openItem,
+                    onOpenItemShown = { entry.savedStateHandle[OPEN_ITEM] = null },
                 )
             }
             screen<EvolutionRoute> {
@@ -135,7 +156,18 @@ private fun TreinoNavHost(start: Any) {
                 )
             }
 
-            screen<SummaryRoute> { SummaryScreen(it.toRoute<SummaryRoute>().date, onClose = back) }
+            screen<SummaryRoute> {
+                val date = it.toRoute<SummaryRoute>().date
+                val todayEntry = runCatching { nav.getBackStackEntry<TodayRoute>() }.getOrNull()
+                SummaryScreen(
+                    date,
+                    onClose = back,
+                    onStartAnother = if (date == container.repository.today() && todayEntry != null) ({
+                        todayEntry.savedStateHandle[START_ANOTHER] = true
+                        nav.popBackStack<TodayRoute>(inclusive = false)
+                    }) else null,
+                )
+            }
             screen<HistoryDayRoute> { HistoryDayScreen(it.toRoute<HistoryDayRoute>().date, onBack = back) }
             screen<ExerciseProgressRoute> { ExerciseProgressScreen(it.toRoute<ExerciseProgressRoute>().exerciseId, onBack = back) }
             screen<WorkoutEditRoute> { entry ->
@@ -189,7 +221,7 @@ private fun TreinoNavHost(start: Any) {
         var lastTab by remember { mutableStateOf(Tab.TODAY) }
         if (tab != null) lastTab = tab
         AnimatedVisibility(
-            visible = tab != null,
+            visible = tab != null && !workoutRunning,
             modifier = Modifier.align(Alignment.BottomCenter),
             enter = fadeIn(tween(220, delayMillis = 80)) + slideInVertically(tween(320)) { it / 2 },
             exit = fadeOut(tween(160)) + slideOutVertically(tween(320)) { it / 2 },
@@ -214,6 +246,7 @@ private fun TreinoNavHost(start: Any) {
 }
 
 private const val OPEN_ITEM = "openItem"
+private const val START_ANOTHER = "startAnother"
 
 /** Tabs keep their own state: Hoje is the root, the others are saved and restored. */
 private fun NavHostController.selectTab(tab: Tab) {

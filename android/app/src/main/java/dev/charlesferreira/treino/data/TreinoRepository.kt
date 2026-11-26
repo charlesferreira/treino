@@ -16,7 +16,11 @@ import dev.charlesferreira.treino.domain.WorkoutItem
 import dev.charlesferreira.treino.domain.WorkoutSequence
 import dev.charlesferreira.treino.domain.backup.Catalog
 import dev.charlesferreira.treino.domain.backup.TreinoData
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import dev.charlesferreira.treino.domain.WorkoutMode
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -96,6 +100,20 @@ class TreinoRepository(
     }.distinctUntilChanged()
 
     fun observeSession(date: String = today()): Flow<Session?> = sessions.observeByDate(date).map { it?.toDomain() }
+
+    /** Whether today's workout is under way ([WorkoutMode.running]): the app hides its tabs. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun observeWorkoutRunning(date: String = today()): Flow<Boolean> =
+        sessions.observeByDate(date).flatMapLatest { entity ->
+            val session = entity?.toDomain()
+            if (session == null || session.endedAt != null || session.startedAt != null) {
+                flowOf(WorkoutMode.running(session, hasEntries = false))
+            } else {
+                combine(entries.observeSets(session.id), entries.observeTimes(session.id)) { sets, times ->
+                    WorkoutMode.running(session, sets.isNotEmpty() || times.isNotEmpty())
+                }
+            }
+        }.distinctUntilChanged()
 
     fun observeSets(sessionId: String): Flow<List<SetEntry>> =
         entries.observeSets(sessionId).map { list -> list.map { it.toDomain() } }

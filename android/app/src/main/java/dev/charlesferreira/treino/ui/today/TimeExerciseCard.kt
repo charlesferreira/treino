@@ -41,13 +41,15 @@ import kotlin.math.max
  */
 @Composable
 fun TimeExerciseCard(item: ItemUi, draft: TimeDraft, actions: WorkoutActions) {
-    Card(
-        borderColor = TreinoColors.AccentBorder,
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 18.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
+    ExerciseBody {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            TText(item.exercise.name, style = TreinoType.Heading.copy(letterSpacing = TreinoType.Body.letterSpacing), modifier = Modifier.weight(1f))
+            TText(
+                item.exercise.name,
+                style = TreinoType.Heading.copy(letterSpacing = TreinoType.Body.letterSpacing),
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(role = androidx.compose.ui.semantics.Role.Button, onClickLabel = "Histórico") { actions.onHistory(item) },
+            )
             TText(item.target, style = TreinoType.mono(13.sp, color = TreinoColors.TextFaint), maxLines = 1)
         }
         (item.item.notes ?: item.exercise.notes)?.takeIf { it.isNotBlank() }?.let {

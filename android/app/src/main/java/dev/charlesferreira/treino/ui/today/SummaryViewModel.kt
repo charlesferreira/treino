@@ -1,5 +1,6 @@
 package dev.charlesferreira.treino.ui.today
 
+import dev.charlesferreira.treino.workout.WorkoutTimer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.charlesferreira.treino.data.DaySummary
@@ -124,7 +125,20 @@ fun previousSession(days: List<DaySummary>, workoutId: String?, date: String): S
     }
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SummaryViewModel(private val repository: TreinoRepository, val date: String) : ViewModel() {
+class SummaryViewModel(
+    private val repository: TreinoRepository,
+    private val workoutTimer: WorkoutTimer,
+    val date: String,
+) : ViewModel() {
+    /** "Apagar treino de hoje" from the summary: the same as Hoje's, then [then] closes it. */
+    fun deleteDay(then: () -> Unit) {
+        viewModelScope.launch {
+            workoutTimer.resetForDeletedDay()
+            repository.deleteDay(date)
+            then()
+        }
+    }
+
     private val session = repository.observeSession(date)
 
     private val sessionId = session.map { it?.id }.distinctUntilChanged()

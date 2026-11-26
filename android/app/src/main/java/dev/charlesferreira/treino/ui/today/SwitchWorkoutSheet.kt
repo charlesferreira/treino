@@ -34,7 +34,8 @@ import dev.charlesferreira.treino.ui.theme.TreinoType
 fun SwitchWorkoutSheet(
     options: List<SwitchOption>,
     onChoose: (String) -> Unit,
-    onManage: () -> Unit,
+    /** Null in a workout under way, where Treinos is out of reach. */
+    onManage: (() -> Unit)?,
     onDismiss: () -> Unit,
 ) {
     Sheet(onDismiss) {
@@ -70,6 +71,6 @@ fun SwitchWorkoutSheet(
                 }
             }
         }
-        GhostButton("Gerenciar treinos", onClick = onManage, icon = TreinoIcons.Lines)
+        onManage?.let { GhostButton("Gerenciar treinos", onClick = it, icon = TreinoIcons.Lines) }
     }
 }

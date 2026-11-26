@@ -34,12 +34,20 @@ import kotlin.math.max
 sealed interface TodaySheet {
     data object Switch : TodaySheet
     data object Note : TodaySheet
+    /** ⋮ of the workout under way. */
+    data object Menu : TodaySheet
     data class EditSet(val setId: String) : TodaySheet
     data class EditTime(val timeId: String) : TodaySheet
 
     /** "Começar outro treino": the switch sheet, but picking reopens the ended day. */
     data object StartAnother : TodaySheet
     data object ConfirmDelete : TodaySheet
+    /** "Terminar treino" with sets still to do. */
+    data object ConfirmFinish : TodaySheet
+    /** Hours without a set: "Ainda treinando?". */
+    data class Stale(val lastAt: Long) : TodaySheet
+    /** The last sessions of an exercise, from its name in the open card. */
+    data class History(val exerciseId: String) : TodaySheet
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -199,6 +207,9 @@ class TodayViewModel(
         _sheet.value = null
     }
 
+    /** The session whose "Ainda treinando?" was answered "Continuar": not asked again. */
+    var staleAnswered: String? = null
+
     fun chooseWorkout(workoutId: String) {
         _sheet.value = null
         selectedItemId.value = null
@@ -268,6 +279,19 @@ class TodayViewModel(
         viewModelScope.launch { repository.updateSet(id, weightKg, reps) }
     }
 
+    /**
+     * "Desfazer" in the rest sheet: the most recent set of today goes, and the rest it started
+     * stops. The exercise it belonged to opens again.
+     */
+    fun undoLastSet() {
+        val ui = state.value ?: return
+        val (item, set) = ui.items.flatMap { item -> item.sets.map { item to it } }
+            .maxByOrNull { (_, set) -> set.loggedAt ?: Long.MIN_VALUE } ?: return
+        RestTimer.skip(app)
+        selectedItemId.value = item.item.id
+        viewModelScope.launch { repository.deleteSet(set.id) }
+    }
+
     fun deleteSet(id: String) {
         _sheet.value = null
         viewModelScope.launch { repository.deleteSet(id) }
@@ -304,11 +328,11 @@ class TodayViewModel(
         }
     }
 
-    /** "Terminar treino": sets the end, then [then] opens the summary. */
-    fun finish(then: () -> Unit) {
+    /** "Terminar treino": sets the end (now, or [at]), then [then] opens the summary. */
+    fun finish(at: Long? = null, then: () -> Unit) {
         viewModelScope.launch {
             if (RestTimer.state(app) != null) RestTimer.skip(app)
-            repository.finishSession(date)
+            if (at != null) repository.finishSession(date, at) else repository.finishSession(date)
             then()
         }
     }

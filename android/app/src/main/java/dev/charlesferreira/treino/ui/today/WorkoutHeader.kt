@@ -65,6 +65,8 @@ fun WorkoutHeader(
     profileName: String,
     onSwitch: () -> Unit,
     onProfile: () -> Unit,
+    /** Workout mode: the avatar's place holds ⋮ (the day's options) and [onProfile] opens them. */
+    menu: Boolean = false,
 ) {
     val count = countText(progress)
     // The rows sit at the bottom (justify-content: flex-end). Collapsed, the design's rows are
@@ -134,15 +136,19 @@ fun WorkoutHeader(
                             .clip(CircleShape)
                             .background(TreinoColors.Surface, CircleShape)
                             .clickable(role = Role.Button, onClick = onProfile)
-                            .semantics { contentDescription = "Perfil" },
+                            .semantics { contentDescription = if (menu) "Mais opções" else "Perfil" },
                         contentAlignment = Alignment.Center,
                     ) {
-                        TText(
-                            initials(profileName),
-                            style = TreinoType.Body.copy(fontSize = 14.sp, lineHeight = 17.sp, fontWeight = FontWeight.W700),
-                            maxLines = 1,
-                            modifier = Modifier.wrapContentWidth(unbounded = true).wrapContentHeight(unbounded = true),
-                        )
+                        if (menu) {
+                            Icon(TreinoIcons.More, tint = TreinoColors.Text, size = 20.dp)
+                        } else {
+                            TText(
+                                initials(profileName),
+                                style = TreinoType.Body.copy(fontSize = 14.sp, lineHeight = 17.sp, fontWeight = FontWeight.W700),
+                                maxLines = 1,
+                                modifier = Modifier.wrapContentWidth(unbounded = true).wrapContentHeight(unbounded = true),
+                            )
+                        }
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(v.rowGap.dp)) {
