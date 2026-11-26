@@ -177,7 +177,16 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   outro treino". Em Evolução > dia, "Apagar dia" no modo Editar. Testes em `TreinoRepositoryTest`
   (apagar o dia sem tocar nos outros; reabrir com outro treino). Release assinado instalado por cima
   no S23 pela depuração sem fio, dados mantidos; conferido por screencap que os botões e as duas folhas
-  aparecem no Hoje e o "Apagar dia" no Editar. Não apaguei nem reabri o Superior C real de hoje.
+  aparecem no Hoje e o "Apagar dia" no Editar. Depois, com o backup exportado, o Superior C foi apagado (ver abaixo).
+- [x] Lista do treino em acordeão (26 nov, pedido no S23: tocar num exercício feito fazia a lista "dançar").
+  A lista fica sempre na ordem do treino: os exercícios fechados são linhas compactas (check e séries
+  quando feitos, número e alvo ou "1/3" quando não), agrupadas em cartões em volta do exercício aberto,
+  que abre no lugar dele com expandir e fade de 220 ms e rola até ficar abaixo do cabeçalho. O aberto
+  ao entrar na tela só aparece, sem animação. Conferido no AVD (Braços: tocar a Prancha deixa a Rosca
+  em cima). No S23 o release foi instalado, mas a tela estava bloqueada para conferir.
+  O "Apagar treino de hoje" foi conferido de verdade no S23: o Superior C do dia sumiu, o Hoje voltou
+  para "Começar treino" (Superior A) e nenhuma notificação do app ficou. "Começar outro treino" foi
+  conferido no AVD (dia terminado → Pernas A, cronômetro seguindo do primeiro início).
 - [x] Passo por placa (26 nov): "−1 placa 20… +1 placa" cortava o valor no S23. Os botões ficaram
   "−1"/"+1" e o passo vai embaixo do valor ("20 kg" / "±1 placa"), no treino e na folha de editar série.
 

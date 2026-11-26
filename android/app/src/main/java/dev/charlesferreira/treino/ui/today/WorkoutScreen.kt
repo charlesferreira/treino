@@ -1,5 +1,18 @@
 package dev.charlesferreira.treino.ui.today
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.MutableTransitionState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onSizeChanged
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -103,6 +116,9 @@ fun WorkoutScreen(
     val status = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val statusOffset = status - HeaderScroll.DESIGN_STATUS_DP.dp
     val ime = WindowInsets.ime.asPaddingValues().calculateBottomPadding()
+    // The exercise open when the screen comes up just shows; later ones unfold (see [OpenExercise]).
+    var settled by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { settled = true }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         Column(
@@ -121,37 +137,23 @@ fun WorkoutScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             val current = ui.current
-            val done = ui.items.filter { it.complete && it.item.id != current?.item?.id }
-            val upcoming = ui.items.filter { !it.complete && it.item.id != current?.item?.id }
-            if (done.isNotEmpty()) {
-                CompactList(done, actions::onSelect) { item ->
-                    DoneMark()
-                    RowName(item)
-                    TText(
-                        loggedSummary(item.sets, item.times).orEmpty(),
-                        style = TreinoType.mono(13.sp, color = TreinoColors.TextDim),
-                        maxLines = 1,
-                    )
-                }
-            }
-            if (current != null) {
-                if (current.isTime) {
-                    TimeExerciseCard(current, timeDraft(current), actions)
-                } else {
-                    CurrentExerciseCard(current, setDraft(current), ui.session?.id, actions)
-                }
-            }
-            if (upcoming.isNotEmpty()) {
-                CompactList(upcoming, actions::onSelect) { item ->
-                    Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) {
-                        TText("${item.number}", style = TreinoType.mono(13.sp, color = TreinoColors.TextFaint), maxLines = 1)
+            // The workout's order never changes: the exercises around the open one stay as compact
+            // rows (done with the check, the rest with the number), and only the one tapped opens,
+            // in its place, like an accordion.
+            segments(ui.items, current).forEach { segment ->
+                when (segment) {
+                    is Segment.Rows -> key(segment.items.first().item.id) {
+                        CompactList(segment.items, actions::onSelect) { item -> CompactRow(item) }
                     }
-                    RowName(item)
-                    TText(
-                        if (item.done > 0) "${item.done}/${item.total}" else item.target,
-                        style = TreinoType.mono(12.sp, color = TreinoColors.TextFaint),
-                        maxLines = 1,
-                    )
+                    is Segment.Open -> key(segment.item.item.id) {
+                        OpenExercise(segment.item, animate = settled) {
+                            if (segment.item.isTime) {
+                                TimeExerciseCard(segment.item, timeDraft(segment.item), actions)
+                            } else {
+                                CurrentExerciseCard(segment.item, setDraft(segment.item), ui.session?.id, actions)
+                            }
+                        }
+                    }
                 }
             }
             when {
@@ -177,6 +179,82 @@ fun WorkoutScreen(
         )
     }
 }
+
+/** The workout in order: runs of compact rows around the open exercise. */
+private sealed interface Segment {
+    data class Rows(val items: List<ItemUi>) : Segment
+    data class Open(val item: ItemUi) : Segment
+}
+
+private fun segments(items: List<ItemUi>, open: ItemUi?): List<Segment> {
+    val out = mutableListOf<Segment>()
+    val run = mutableListOf<ItemUi>()
+    for (item in items) {
+        if (item.item.id == open?.item?.id) {
+            if (run.isNotEmpty()) out += Segment.Rows(run.toList()).also { run.clear() }
+            out += Segment.Open(item)
+        } else {
+            run += item
+        }
+    }
+    if (run.isNotEmpty()) out += Segment.Rows(run.toList())
+    return out
+}
+
+/** A closed exercise: the check and the logged sets when done; else its number and target or "1/3". */
+@Composable
+private fun RowScope.CompactRow(item: ItemUi) {
+    if (item.complete) {
+        DoneMark()
+        RowName(item)
+        TText(
+            loggedSummary(item.sets, item.times).orEmpty(),
+            style = TreinoType.mono(13.sp, color = TreinoColors.TextDim),
+            maxLines = 1,
+        )
+    } else {
+        Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) {
+            TText("${item.number}", style = TreinoType.mono(13.sp, color = TreinoColors.TextFaint), maxLines = 1)
+        }
+        RowName(item)
+        TText(
+            if (item.done > 0) "${item.done}/${item.total}" else item.target,
+            style = TreinoType.mono(12.sp, color = TreinoColors.TextFaint),
+            maxLines = 1,
+        )
+    }
+}
+
+/**
+ * The open exercise. When it opens after the screen is up (a tap, or the next one after the last
+ * set) it unfolds from its row (a short expand and fade) and scrolls into view below the collapsed
+ * header, since the one that closed above it may have pulled the list up.
+ */
+@Composable
+private fun OpenExercise(item: ItemUi, animate: Boolean, content: @Composable () -> Unit) {
+    // Decided once, when this exercise opens: [animate] turns true right after the first frame.
+    val unfold = remember { animate }
+    val visible = remember { MutableTransitionState(!unfold).apply { targetState = true } }
+    val bring = remember { BringIntoViewRequester() }
+    var height by remember { mutableIntStateOf(0) }
+    val above = with(LocalDensity.current) { HEADER_CLEARANCE.toPx() }
+    if (unfold) {
+        LaunchedEffect(item.item.id) {
+            delay(OPEN_MS.toLong() + 20)
+            bring.bringIntoView(Rect(0f, -above, 1f, height.toFloat()))
+        }
+    }
+    AnimatedVisibility(
+        visibleState = visible,
+        modifier = Modifier.bringIntoViewRequester(bring).onSizeChanged { height = it.height },
+        enter = expandVertically(tween(OPEN_MS), expandFrom = Alignment.Top) + fadeIn(tween(OPEN_MS)),
+    ) { content() }
+}
+
+/** The collapsed header over the list, plus a little air. */
+private val HEADER_CLEARANCE = 120.dp
+
+private const val OPEN_MS = 220
 
 /** The card of exercises done (and of the ones still to do): 40 dp rows, padding 6/16. */
 @Composable
