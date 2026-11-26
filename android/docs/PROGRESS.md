@@ -172,6 +172,12 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   O voltar do sistema usa outras duas transições do `NavHost` (`predictivePop*`), cujo padrão
   encolhe a tela para o meio; no Android 16 o botão Voltar também passa por elas. Agora são as mesmas
   do voltar pelo cabeçalho.
+- [x] Apagar o dia e começar outro treino (26 nov, pedido para testar o descanso de novo no S23). No fim
+  da lista do Hoje: "Apagar treino de hoje" (sempre que o treino começou) e, depois do fim, "Começar
+  outro treino". Em Evolução > dia, "Apagar dia" no modo Editar. Testes em `TreinoRepositoryTest`
+  (apagar o dia sem tocar nos outros; reabrir com outro treino). Release assinado instalado por cima
+  no S23 pela depuração sem fio, dados mantidos; conferido por screencap que os botões e as duas folhas
+  aparecem no Hoje e o "Apagar dia" no Editar. Não apaguei nem reabri o Superior C real de hoje.
 - [x] Passo por placa (26 nov): "−1 placa 20… +1 placa" cortava o valor no S23. Os botões ficaram
   "−1"/"+1" e o passo vai embaixo do valor ("20 kg" / "±1 placa"), no treino e na folha de editar série.
 
@@ -389,6 +395,23 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     Os "–" usados como valor vazio viraram vazio (células de série) ou "-" (blocos de número). Nas
     notas do programa de exemplo (cópia do PWA, só semente) saíram o travessão, o RIR e a dica de
     progressão; o `src/program.json` do PWA não mudou.
+
+- Apagar e começar outro (26 nov):
+  - Um treino por dia continua sendo o modelo (o backup do PWA guarda um registro por data). "Começar
+    outro treino" reabre o dia: abre a folha "Treino de hoje"; o escolhido vira o treino do dia, as
+    séries ficam, o fim é apagado e o início continua o primeiro (`reopenSession`). A sequência passa
+    a contar o dia como o novo treino.
+  - Escolher o mesmo treino mostra os exercícios já feitos. Para repetir do zero: apagar e começar.
+  - Os botões não estão no design: o menor encaixe, aprovado, é o fim da lista (cinza; apagar em
+    vermelho). A confirmação é uma folha como "Apagar treino" de Treinos: "As séries, os tempos e a
+    nota do dia somem. Não pode ser desfeito." (`DeleteDaySheet`).
+  - `deleteDay` apaga séries, tempos e a sessão na mesma transação, sem depender da cascata. Apagar o
+    dia de hoje chama antes `WorkoutTimer.resetForDeletedDay` (o mesmo de `resetForImport`: descanso,
+    alarme e notificações).
+  - Depuração sem fio: o `adb mdns services` não lista o S23, embora o macOS veja o anúncio. O
+    endereço sai de `dns-sd -L <instância> _adb-tls-connect._tcp local.` e `adb connect IP:porta`.
+    Um servidor do adb aberto antes deu "No route to host" (sem acesso à rede local do macOS);
+    `adb kill-server` e conectar de novo resolveu.
 
 ## Próximo passo
 
