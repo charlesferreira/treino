@@ -1,0 +1,110 @@
+{
+  "version": 1,
+  "startDate": "2026-07-22",
+  "exercises": {
+    "supino-reto": { "name": "Supino reto (barra ou halteres)", "notes": "2 séries de aproximação leves antes da 1ª série válida." },
+    "remada-apoiada": { "name": "Remada apoiada no peito ou máquina", "notes": "Escolhida para poupar a lombar (stiff é amanhã)." },
+    "supino-inclinado-halteres": { "name": "Supino inclinado com halteres", "notes": "" },
+    "puxada-aberta": { "name": "Puxada aberta (pegada pronada)", "notes": "" },
+    "rosca-direta": { "name": "Rosca direta (barra ou halteres)", "notes": "" },
+    "triceps-corda": { "name": "Tríceps na corda", "notes": "" },
+    "leg-press": { "name": "Leg press", "notes": "2 séries de aproximação antes da 1ª série válida." },
+    "stiff": { "name": "Stiff (barra ou halteres)", "notes": "RIR mais alto de propósito: proteger a lombar. Técnica > carga." },
+    "cadeira-extensora": { "name": "Cadeira extensora", "notes": "" },
+    "mesa-flexora": { "name": "Mesa flexora", "notes": "" },
+    "panturrilha-em-pe": { "name": "Panturrilha em pé", "notes": "Pausa de 1s embaixo, amplitude completa." },
+    "abdomen": { "name": "Abdômen (polia alta ou elevação de pernas)", "notes": "" },
+    "desenvolvimento-halteres": { "name": "Desenvolvimento com halteres sentado (ou máquina)", "notes": "2 séries de aproximação." },
+    "puxada-supinada": { "name": "Puxada supinada (pegada fechada)", "notes": "Costas + carga pesada no bíceps." },
+    "remada-baixa": { "name": "Remada baixa no triângulo ou serrote", "notes": "" },
+    "peck-deck": { "name": "Crucifixo na máquina (peck deck)", "notes": "" },
+    "face-pull": { "name": "Face pull", "notes": "" },
+    "rosca-martelo": { "name": "Rosca martelo", "notes": "" },
+    "triceps-testa": { "name": "Tríceps testa (barra W ou halteres)", "notes": "Se incomodar o cotovelo, trocar por francês no cabo." },
+    "rosca-w": { "name": "Rosca direta com barra W", "notes": "Pesada: é aqui que a carga sobe mês a mês." },
+    "supino-fechado": { "name": "Supino fechado ou tríceps na máquina (dips)", "notes": "" },
+    "rosca-inclinada": { "name": "Rosca inclinada com halteres", "notes": "Posição alongada — rende muito por série." },
+    "triceps-frances": { "name": "Tríceps francês sentado (halter acima da cabeça)", "notes": "" },
+    "elevacao-lateral-cabo": { "name": "Elevação lateral no cabo", "notes": "OMBRO SENSÍVEL: tronco levemente inclinado, braço um pouco à frente, polegar de leve pra cima, amplitude só até onde NÃO dói (~70–80° basta). Se doer: substituir por 2 séries extras de face pull por 3–4 semanas." },
+    "rosca-scott": { "name": "Rosca scott ou concentrada", "notes": "Perto da falha, sem medo." },
+    "triceps-unilateral": { "name": "Tríceps pushdown unilateral", "notes": "Perto da falha, sem medo." },
+    "hip-thrust": { "name": "Elevação pélvica (hip thrust)", "notes": "" },
+    "leg-press-pes-altos": { "name": "Leg press com pés altos na plataforma", "notes": "Ênfase em posteriores/glúteos." },
+    "flexora-sentada": { "name": "Flexora sentada", "notes": "" },
+    "panturrilha-sentada": { "name": "Panturrilha sentada", "notes": "" }
+  },
+  "week": {
+    "monday": {
+      "title": "Superior A",
+      "type": "gym",
+      "items": [
+        { "exercise": "supino-reto", "sets": 3, "reps": [6, 10], "rir": "2", "rest": 150 },
+        { "exercise": "remada-apoiada", "sets": 3, "reps": [8, 12], "rir": "2", "rest": 120 },
+        { "exercise": "supino-inclinado-halteres", "sets": 3, "reps": [8, 12], "rir": "1–2", "rest": 120 },
+        { "exercise": "puxada-aberta", "sets": 3, "reps": [10, 12], "rir": "1–2", "rest": 120 },
+        { "exercise": "rosca-direta", "sets": 2, "reps": [8, 12], "rir": "1", "rest": 90 },
+        { "exercise": "triceps-corda", "sets": 2, "reps": [10, 15], "rir": "1", "rest": 90 }
+      ]
+    },
+    "tuesday": {
+      "title": "Pernas A",
+      "type": "gym",
+      "items": [
+        { "exercise": "leg-press", "sets": 3, "reps": [8, 12], "rir": "2", "rest": 150 },
+        { "exercise": "stiff", "sets": 3, "reps": [8, 10], "rir": "2–3", "rest": 150 },
+        { "exercise": "cadeira-extensora", "sets": 2, "reps": [12, 15], "rir": "1", "rest": 90 },
+        { "exercise": "mesa-flexora", "sets": 3, "reps": [10, 15], "rir": "1", "rest": 90 },
+        { "exercise": "panturrilha-em-pe", "sets": 3, "reps": [10, 15], "rir": "1", "rest": 75 },
+        { "exercise": "abdomen", "sets": 3, "reps": [10, 15], "rir": "1–2", "rest": 60 }
+      ]
+    },
+    "wednesday": {
+      "title": "Corrida Z2",
+      "type": "cardio",
+      "cardio": { "minutes": [30, 40], "guidance": "Ritmo de conversa: você consegue falar frases completas. Esteira vale: 1% de inclinação. Caminhar trechos é aceitável." }
+    },
+    "thursday": {
+      "title": "Superior B",
+      "type": "gym",
+      "items": [
+        { "exercise": "desenvolvimento-halteres", "sets": 3, "reps": [8, 12], "rir": "2", "rest": 135 },
+        { "exercise": "puxada-supinada", "sets": 3, "reps": [8, 12], "rir": "1–2", "rest": 120 },
+        { "exercise": "remada-baixa", "sets": 3, "reps": [10, 12], "rir": "1–2", "rest": 120 },
+        { "exercise": "peck-deck", "sets": 2, "reps": [12, 15], "rir": "1", "rest": 90 },
+        { "exercise": "face-pull", "sets": 2, "reps": [12, 20], "rir": "1–2", "rest": 75 },
+        { "exercise": "rosca-martelo", "sets": 2, "reps": [10, 12], "rir": "1", "rest": 90 },
+        { "exercise": "triceps-testa", "sets": 2, "reps": [10, 12], "rir": "1", "rest": 90 }
+      ]
+    },
+    "friday": {
+      "title": "Braços + Ombros",
+      "type": "gym",
+      "items": [
+        { "exercise": "rosca-w", "sets": 3, "reps": [6, 10], "rir": "1–2", "rest": 120 },
+        { "exercise": "supino-fechado", "sets": 3, "reps": [6, 10], "rir": "2", "rest": 135 },
+        { "exercise": "rosca-inclinada", "sets": 2, "reps": [10, 12], "rir": "1", "rest": 90 },
+        { "exercise": "triceps-frances", "sets": 2, "reps": [10, 12], "rir": "1", "rest": 90 },
+        { "exercise": "elevacao-lateral-cabo", "sets": 3, "reps": [12, 20], "rir": "1–2", "rest": 75 },
+        { "exercise": "rosca-scott", "sets": 2, "reps": [12, 15], "rir": "0–1", "rest": 75 },
+        { "exercise": "triceps-unilateral", "sets": 2, "reps": [12, 15], "rir": "0–1", "rest": 75 }
+      ]
+    },
+    "saturday": {
+      "title": "Pernas B",
+      "type": "gym",
+      "items": [
+        { "exercise": "hip-thrust", "sets": 3, "reps": [8, 12], "rir": "2", "rest": 135 },
+        { "exercise": "leg-press-pes-altos", "sets": 3, "reps": [10, 15], "rir": "2", "rest": 135 },
+        { "exercise": "flexora-sentada", "sets": 3, "reps": [10, 15], "rir": "1", "rest": 90 },
+        { "exercise": "cadeira-extensora", "sets": 2, "reps": [12, 15], "rir": "1", "rest": 90 },
+        { "exercise": "panturrilha-sentada", "sets": 3, "reps": [12, 20], "rir": "1", "rest": 60 },
+        { "exercise": "abdomen", "sets": 2, "reps": [10, 15], "rir": "1–2", "rest": 60 }
+      ]
+    },
+    "sunday": {
+      "title": "Corrida Z2 (flexível)",
+      "type": "cardio",
+      "cardio": { "minutes": [30, 40], "guidance": "Dia-válvula: se a semana pesou (sono ruim, corpo reclamando), vira caminhada ou descanso total, sem culpa." }
+    }
+  }
+}

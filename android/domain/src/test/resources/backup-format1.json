@@ -1,0 +1,22 @@
+{
+  "app": "treino",
+  "format": 1,
+  "exportedAt": "2026-08-10",
+  "logs": {
+    "2026-08-03": {
+      "template": "monday",
+      "sets": {
+        "supino-reto": [
+          { "w": 40, "r": 10, "rir": 2 },
+          { "w": 40, "r": 9, "rir": 1 }
+        ]
+      }
+    },
+    "2026-08-05": {
+      "template": "wednesday",
+      "sets": {},
+      "cardio": { "minutes": 30 }
+    }
+  },
+  "settings": { "sound": false }
+}
