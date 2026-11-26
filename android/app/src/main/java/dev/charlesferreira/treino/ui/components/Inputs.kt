@@ -49,6 +49,7 @@ fun Stepper(
     plusDescription: String? = null,
     minusEnabled: Boolean = true,
     valueFontSize: androidx.compose.ui.unit.TextUnit = 15.sp,
+    caption: String? = null,
 ) {
     val shape = RoundedCornerShape(26.dp)
     Row(
@@ -56,13 +57,22 @@ fun Stepper(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         StepperButton(minusLabel, minusDescription, minusEnabled, onMinus)
-        TText(
-            value,
-            modifier = Modifier.weight(1f),
-            style = TreinoType.mono(valueFontSize),
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-        )
+        androidx.compose.foundation.layout.Column(
+            Modifier.weight(1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            TText(value, style = TreinoType.mono(valueFontSize), textAlign = TextAlign.Center, maxLines = 1)
+            // The step, when the buttons can't say it ("±1 placa").
+            if (caption != null) {
+                TText(
+                    caption,
+                    style = TreinoType.Body.copy(fontSize = 10.sp, lineHeight = 12.sp, fontWeight = FontWeight.W600),
+                    color = TreinoColors.TextFaint,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                )
+            }
+        }
         StepperButton(plusLabel, plusDescription, true, onPlus)
     }
 }

@@ -169,6 +169,11 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   sai). O descanso expandido sobe com mola e desce ao minimizar ou pular; a pílula surge depois,
   subindo um pouco. Código em `ui/nav/Transitions.kt`, `ui/nav/Overlay.kt` e `RestLayer`. Conferido
   no S23 gravando a tela (abas, Perfil e volta); o descanso ainda não foi visto rodando.
+  O voltar do sistema usa outras duas transições do `NavHost` (`predictivePop*`), cujo padrão
+  encolhe a tela para o meio; no Android 16 o botão Voltar também passa por elas. Agora são as mesmas
+  do voltar pelo cabeçalho.
+- [x] Passo por placa (26 nov): "−1 placa 20… +1 placa" cortava o valor no S23. Os botões ficaram
+  "−1"/"+1" e o passo vai embaixo do valor ("20 kg" / "±1 placa"), no treino e na folha de editar série.
 
 ## Decisões tomadas sozinho
 

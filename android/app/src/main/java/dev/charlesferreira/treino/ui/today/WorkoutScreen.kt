@@ -213,7 +213,6 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
     val exercise = item.exercise
     val next = item.nextPosition()
     val rows = maxOf(item.total, item.sets.size + 1)
-    val step = stepLabel(exercise)
     var focused by remember(item.item.id, next) { mutableStateOf(CellFocus.NONE) }
     Card(
         borderColor = TreinoColors.AccentBorder,
@@ -297,8 +296,9 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
                 onMinus = { actions.onStepWeight(item, false) },
                 onPlus = { actions.onStepWeight(item, true) },
                 modifier = Modifier.weight(1f),
-                minusLabel = "−$step",
-                plusLabel = "+$step",
+                minusLabel = "−${stepButton(exercise)}",
+                plusLabel = "+${stepButton(exercise)}",
+                caption = stepCaption(exercise),
                 minusDescription = "Menos ${stepDescription(exercise)}",
                 plusDescription = "Mais ${stepDescription(exercise)}",
             )

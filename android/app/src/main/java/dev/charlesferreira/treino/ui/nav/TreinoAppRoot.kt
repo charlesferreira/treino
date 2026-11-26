@@ -90,6 +90,10 @@ private fun TreinoNavHost(start: Any) {
             exitTransition = { screenExit() },
             popEnterTransition = { screenPopEnter() },
             popExitTransition = { screenPopExit() },
+            // The system back (gesture and, on Android 16, the button too) runs these; their
+            // default shrinks the screen to the middle.
+            predictivePopEnterTransition = { screenPopEnter() },
+            predictivePopExitTransition = { screenPopExit() },
         ) {
             screen<OnboardingRoute> {
                 OnboardingScreen(

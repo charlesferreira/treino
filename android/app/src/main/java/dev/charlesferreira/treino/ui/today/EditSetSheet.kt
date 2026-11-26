@@ -45,7 +45,6 @@ fun EditSetSheet(
 ) {
     var weight by rememberSaveable(set.id) { mutableDoubleStateOf(set.weightKg) }
     var reps by rememberSaveable(set.id) { mutableIntStateOf(set.reps) }
-    val step = stepLabel(exercise)
     Sheet(onDismiss) {
         SheetHeading("${exercise.name}, série ${set.position + 1}", set.loggedAt)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -54,8 +53,9 @@ fun EditSetSheet(
                 onMinus = { weight = Steps.down(weight, exercise) },
                 onPlus = { weight = Steps.up(weight, exercise) },
                 modifier = Modifier.weight(1f),
-                minusLabel = "−$step",
-                plusLabel = "+$step",
+                minusLabel = "−${stepButton(exercise)}",
+                plusLabel = "+${stepButton(exercise)}",
+                caption = stepCaption(exercise),
                 minusDescription = "Menos ${stepDescription(exercise)}",
                 plusDescription = "Mais ${stepDescription(exercise)}",
             )

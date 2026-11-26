@@ -243,6 +243,19 @@ fun stepLabel(exercise: Exercise): String {
     return if (step.plates != null) "${step.plates} ${if (step.plates == 1) "placa" else "placas"}" else PtBr.number(step.kg)
 }
 
+/** The stepper buttons' step: the number only ("2", "2,5", "1"); plates get [stepCaption]. */
+fun stepButton(exercise: Exercise): String {
+    val step = Steps.of(exercise)
+    return step.plates?.toString() ?: PtBr.number(step.kg)
+}
+
+/**
+ * Under the stepper's value on a machine: "±1 placa". "−1 placa" on each button left the value
+ * no room ("20…" on the S23).
+ */
+fun stepCaption(exercise: Exercise): String? =
+    if (Steps.of(exercise).plates != null) "±${stepLabel(exercise)}" else null
+
 /** TalkBack: "2 kg", "1 placa". */
 fun stepDescription(exercise: Exercise): String {
     val step = Steps.of(exercise)
