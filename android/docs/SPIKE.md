@@ -108,7 +108,7 @@ de canal, `CATEGORY_ALARM`, ações +30s e Abrir, título "Hora da série 2", te
 
 ## Observações para as próximas fases
 
-- A tela de spike (`MainActivity`) atualiza o texto a cada 250 ms só para a tela; o timer não
+- A tela de spike (hoje `debug/TimerSpikeScreen.kt`) atualiza o texto a cada 250 ms só para a tela; o timer não
   depende dela. Ela some na Fase 3.
 - O botão "Registrar série" existe como `RestNotifications.logSetAction()` e a ação
   `ACTION_LOG_SET` chega ao `RestTimer.setLogHandler`, que hoje só registra no log. Ele não
@@ -130,7 +130,8 @@ adb wait-for-device && adb shell getprop sys.boot_completed             # 1
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb shell pm grant dev.charlesferreira.treino android.permission.POST_NOTIFICATIONS
 adb shell am start -n dev.charlesferreira.treino/.MainActivity
-adb shell input tap 540 1189        # "Descanso 15s" (1080x2400); 540 1378 = "Descanso 90s"
+# Desde a Fase 1 a tela do spike fica em Perfil (avatar) > Debug > "Timer (spike da Fase 0)",
+# só no build debug. Os botões "Descanso 15s" e "Descanso 90s" estão no meio da tela.
 adb shell input keyevent KEYCODE_SLEEP
 adb shell dumpsys deviceidle force-idle      # "Now forced in to deep idle mode"
 adb shell dumpsys deviceidle get deep        # IDLE
