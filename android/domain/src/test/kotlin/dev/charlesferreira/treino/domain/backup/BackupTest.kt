@@ -33,7 +33,7 @@ class BackupTest {
         val p = BackupImporter.parse(format2)
         assertEquals(BackupSource.FORMAT_2, p.source)
         assertEquals("2026-10-21", p.exportedAt)
-        assertEquals(9, p.days)
+        assertEquals(8, p.days) // 07/10 só tem o treino escolhido
         assertEquals(24, p.sets)
         assertEquals(4, p.times)
         assertEquals(4, p.workouts)
@@ -247,7 +247,7 @@ class BackupTest {
         assertEquals(BackupSource.FORMAT_3, back.source)
         assertEquals("2026-11-26", back.exportedAt)
         assertEquals(edited, back.data)
-        assertEquals(9, back.days)
+        assertEquals(8, back.days)
         assertEquals(24, back.sets)
         assertEquals(4, back.times)
         assertEquals(4, back.workouts)
@@ -331,5 +331,20 @@ class BackupTest {
         assertEquals(listOf(20.0 to 10, 2.5 to 8), p.data.setEntries.map { it.weightKg to it.reps })
         assertNull(p.data.sessions.single().workoutId) // template desconhecido
         assertFalse(p.data.exercises.any { it.legacyId == "b" })
+    }
+
+    @Test
+    fun `dia vazio do PWA nao conta como dia de treino na previa`() {
+        // Como no backup real de 25 nov: a última série apagada deixa `sets: {}` no dia.
+        val p = BackupImporter.parse(
+            """{"2026-08-01":{"template":"monday","sets":{"a":[{"w":20,"r":10}]}},
+               "2026-11-25":{"template":"monday","sets":{}},
+               "2026-11-26":{"template":"monday","sets":{"a":[]},"times":{}},
+               "2026-11-27":{"template":"monday","sets":{},"note":"só alongamento"}}""",
+        )
+        assertEquals(2, p.days)
+        assertEquals("2026-11-27", p.lastDate)
+        // As sessões continuam, com o treino escolhido do dia.
+        assertEquals(4, p.data.sessions.size)
     }
 }

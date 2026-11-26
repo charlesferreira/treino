@@ -143,7 +143,9 @@ adb shell dumpsys deviceidle unforce
 
 ## Para testar no S23
 
-Instalar o APK de debug (`adb install -r`) e fazer, nesta ordem:
+Desde 26 nov o S23 tem o **release** assinado (`~/Downloads/treino-release-2026-11-26.apk`). A tela do
+spike (Perfil > Debug) só existe no debug: no release, os itens 1 a 8 usam um descanso de verdade
+(Hoje > Começar treino > registrar uma série). Fazer, nesta ordem:
 
 1. **Now Bar / Live Update (One UI 8.5).** Iniciar "Descanso 90s" e bloquear. Conferir se o
    descanso aparece na Now Bar da tela bloqueada e como chip na barra de status, com a contagem

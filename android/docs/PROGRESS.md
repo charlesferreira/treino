@@ -11,7 +11,8 @@ pasta `android/`. O PWA da raiz não mudou.
 - `~/Downloads/treino-debug-2026-11-26.apk` (12,4 MB, debug, assinatura de debug).
 - Para gerar de novo: `cd android && ./gradlew :app:assembleDebug`. O arquivo sai em
   `app/build/outputs/apk/debug/app-debug.apk`.
-- O release assinado é a Fase 5. Falta o `android/keystore.properties`, igual ao do zazen.
+- Release assinado (Fase 5, 26 nov): `~/Downloads/treino-release-2026-11-26.apk` (2,1 MB, R8 ligado),
+  instalado no S23 sobre uma instalação limpa. Ver "Release assinado" abaixo.
 
 ### O que testar no S23, passo a passo
 
@@ -77,8 +78,7 @@ pasta `android/`. O PWA da raiz não mudou.
 
 - Tudo que só o S23 valida (item 6 acima).
 - Teste com um backup real do PWA (item 1 acima).
-- Fase 5: o APK release assinado. Falta criar a keystore e o `keystore.properties`, como no zazen.
-  Depois, instalar no celular da irmã.
+- Fase 5: instalar o release no celular da irmã.
 - Fase 6: a troca nos dois celulares.
 - Detalhes conhecidos:
   - a barra da notificação enche em linha reta pelo total de séries, não por exercício;
@@ -142,6 +142,23 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   dias) puxado e conferido → reimportado com um descanso correndo: descanso, alarme e notificações
   sumiram. Sem crash no `logcat -b crash`. `:domain:test :app:testDebugUnitTest :app:assembleDebug
   :app:assembleRelease` passam (release sem assinatura).
+- [x] Fase 5: release assinado (26 nov). Keystore `~/.android-keys/treino-release.jks` (PKCS12, RSA 4096,
+  alias `treino`, válida até 2054, SHA-256 do certificado `E8:A8:12:2F:…:F9:08:45`), com cópia do
+  `keystore.properties` em `~/.android-keys/treino-keystore.properties`. **Perder a keystore impede
+  atualizar o app instalado sem desinstalar (e perder os dados).** Gerar: copiar o
+  `keystore.properties` para `android/` e `./gradlew :app:assembleRelease`; sai em
+  `app/build/outputs/apk/release/app-release.apk`, assinado v2. Debug e release têm assinaturas
+  diferentes: trocar um pelo outro exige `adb uninstall dev.charlesferreira.treino` (apaga os dados;
+  exporte antes). No S23 (SM-S918B), sem Treino instalado: `adb install` do release, primeiro uso →
+  "Já tenho um backup" → `treino-backup-2026-11-25.json` do PWA (Downloads) → prévia "11 dias de
+  treino, 168 séries, 7 treinos, 31 exercícios, 22 jul a 12 ago" → Importar → Evolução com 12 ago,
+  11 ago, 5 ago... Sem crash no `logcat -b crash` (o R8 não quebrou o kotlinx.serialization).
+- [x] Backup real do PWA (26 nov). Os dois arquivos de 25 nov do S23 (`treino-backup-2026-11-25.json`,
+  7 treinos, e `-superiores.json`, 3 treinos Superior A/B/C) passam pelo importador com os mesmos
+  números que o JSON (167 séries, 1 tempo, 12 e 11 dias no log). Achado: o PWA deixa no log o dia em
+  que só se escolheu o treino ou em que a última série foi apagada (`"2026-11-25": {template,
+  sets: {}}`). A sessão continua entrando (guarda o treino escolhido do dia, como o PWA usa na
+  sugestão), mas a prévia agora conta dias como Evolução > Dias: com série, tempo ou nota (dizia 12).
 
 ## Decisões tomadas sozinho
 
@@ -360,6 +377,6 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
 
 ## Próximo passo
 
-Fases 2 e 3 prontas. Falta testar com um backup real exportado do PWA do celular (o teste usou
-um gerado no formato dele) e a Fase 5 (APK assinado). A Fase 4 ainda
-precisa do S23 (`SPIKE.md`, "Para testar no S23", itens 9 a 11).
+Fases 0 a 5 prontas e o release assinado está no S23 com os dados do PWA. Falta anotar no
+`SPIKE.md` os testes do aparelho ("Para testar no S23", itens 1 a 11) e corrigir o que falhar;
+depois a Fase 6 (a troca nos dois celulares).

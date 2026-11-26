@@ -291,11 +291,15 @@ object BackupImporter {
         hasPlan: Boolean,
         seeded: Boolean,
     ): ImportPreview {
-        val dates = data.sessions.map { it.date }
+        // Conta como Evolução > Dias: o PWA deixa no log o dia em que só se escolheu o treino (ou
+        // em que a última série foi apagada). A sessão entra, com o treino escolhido, mas não é um
+        // dia de treino.
+        val withEntries = data.setEntries.mapTo(HashSet()) { it.sessionId } + data.timeEntries.map { it.sessionId }
+        val dates = data.sessions.filter { it.id in withEntries || it.note != null }.map { it.date }
         return ImportPreview(
             source = source,
             exportedAt = backup?.get("exportedAt").asString(),
-            days = data.sessions.size,
+            days = dates.size,
             sets = data.setEntries.size,
             times = data.timeEntries.size,
             workouts = data.workouts.size,
