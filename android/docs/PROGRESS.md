@@ -213,8 +213,9 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     do treino. Cada metade do stepper (−/+) é área de toque.
   - Testes: `WorkoutModeTest` (domínio) e `ExerciseHistoryTest`. Conferido no AVD: abas somem e
     voltam, ⋮, confirmação, Desfazer, steppers no descanso, adicionar exercício, histórico, resumo →
-    "Começar outro treino". Release assinado instalado por cima no S23 com os dados mantidos; a
-    tela estava bloqueada para conferir por screencap.
+    "Começar outro treino". Release assinado instalado por cima no S23 com os dados mantidos e
+    conferido por screencap (Hoje com o Superior A antes de começar, sem crash no `logcat -b crash`). O
+    modo treino em si não foi aberto no S23, para não criar um dia de treino nos dados reais.
   - Fica como está no design: o "Pular" só na folha de descanso (a pílula tem +15s) e o contador
     "1/6" contando séries enquanto a barra mostra um segmento por exercício.
 
