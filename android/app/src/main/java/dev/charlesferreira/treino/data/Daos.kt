@@ -87,6 +87,9 @@ interface WorkoutDao {
     @Query("SELECT * FROM workout_item ORDER BY workout_id, position")
     suspend fun getAllItems(): List<WorkoutItemEntity>
 
+    @Query("SELECT * FROM workout_item ORDER BY workout_id, position")
+    fun observeAllItems(): Flow<List<WorkoutItemEntity>>
+
     @Query("SELECT * FROM workout_item WHERE id = :id")
     suspend fun getItem(id: String): WorkoutItemEntity?
 

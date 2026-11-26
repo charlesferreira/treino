@@ -14,8 +14,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable data object ProfileRoute
 
-// Hoje
-@Serializable data class EditSetRoute(val setId: String)
+// Hoje (switching the workout, the note and editing a set are sheets of Hoje)
 @Serializable data class SummaryRoute(val date: String)
 
 // Evolução

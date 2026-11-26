@@ -64,6 +64,10 @@ class TreinoRepository(
     fun observeItems(workoutId: String): Flow<List<WorkoutItem>> =
         workouts.observeItems(workoutId).map { list -> list.map { it.toDomain() } }
 
+    /** Every item of every workout ("Trocar treino" tells a time workout by its items). */
+    fun observeAllItems(): Flow<List<WorkoutItem>> =
+        workouts.observeAllItems().map { list -> list.map { it.toDomain() } }
+
     /** The workout of [date]: the one chosen or logged that day, or the next in the rotation. */
     fun observeWorkoutFor(date: String = today()): Flow<Workout?> = combine(
         observeWorkouts(),

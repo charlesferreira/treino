@@ -9,13 +9,8 @@ import dev.charlesferreira.treino.domain.ExerciseKind
 import dev.charlesferreira.treino.domain.PtBr
 import dev.charlesferreira.treino.domain.Workout
 import dev.charlesferreira.treino.domain.WorkoutItem
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -34,48 +29,6 @@ class OnboardingViewModel(private val repository: TreinoRepository) : ViewModel(
             repository.seedCatalog()
             then()
         }
-    }
-}
-
-data class TodayItemRow(val number: Int, val name: String, val target: String)
-
-data class TodayState(
-    val dateLabel: String,
-    val profileName: String,
-    val workout: Workout?,
-    val items: List<TodayItemRow>,
-    val setCount: Int,
-    val started: Boolean,
-)
-
-/** Phase 1 placeholder of Hoje: today's workout from the rotation and its items. */
-@OptIn(ExperimentalCoroutinesApi::class)
-class TodayViewModel(private val repository: TreinoRepository) : ViewModel() {
-    private val date = repository.today()
-
-    private val workoutItems = repository.observeWorkoutFor(date).flatMapLatest { w ->
-        if (w == null) flowOf(null to emptyList()) else repository.observeItems(w.id).map { w to it }
-    }
-
-    val state: StateFlow<TodayState?> = combine(
-        workoutItems,
-        repository.observeExercises(),
-        repository.observeSession(date),
-        repository.settings.settings,
-    ) { (workout, items), exercises, session, settings ->
-        val byId = exercises.associateBy { it.id }
-        TodayState(
-            dateLabel = weekdayLabel(date),
-            profileName = settings.profileName,
-            workout = workout,
-            items = items.mapIndexed { i, item -> TodayItemRow(i + 1, byId[item.exerciseId]?.name ?: "?", target(item, byId[item.exerciseId])) },
-            setCount = items.sumOf { it.sets },
-            started = session?.startedAt != null,
-        )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
-
-    fun start() {
-        viewModelScope.launch { repository.startSession(date) }
     }
 }
 

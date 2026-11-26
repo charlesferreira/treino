@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.selection.toggleable
@@ -47,6 +48,7 @@ fun Stepper(
     minusDescription: String? = null,
     plusDescription: String? = null,
     minusEnabled: Boolean = true,
+    valueFontSize: androidx.compose.ui.unit.TextUnit = 15.sp,
 ) {
     val shape = RoundedCornerShape(26.dp)
     Row(
@@ -57,7 +59,7 @@ fun Stepper(
         TText(
             value,
             modifier = Modifier.weight(1f),
-            style = TreinoType.mono(15.sp),
+            style = TreinoType.mono(valueFontSize),
             textAlign = TextAlign.Center,
             maxLines = 1,
         )
@@ -67,12 +69,15 @@ fun Stepper(
 
 @Composable
 private fun StepperButton(label: String, description: String?, enabled: Boolean, onClick: () -> Unit) {
+    // At least 52 dp square; a longer label ("−1 placa") widens it into a pill.
     Box(
         modifier = Modifier
-            .size(52.dp)
+            .height(52.dp)
+            .widthIn(min = 52.dp)
             .clip(CircleShape)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier),
+            .then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier)
+            .padding(horizontal = if (label.length > 3) 12.dp else 0.dp),
         contentAlignment = Alignment.Center,
     ) {
         TText(

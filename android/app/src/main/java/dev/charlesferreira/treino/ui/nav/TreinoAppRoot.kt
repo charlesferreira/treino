@@ -35,8 +35,10 @@ import dev.charlesferreira.treino.ui.screens.PlaceholderScreen
 import dev.charlesferreira.treino.ui.screens.ProfileScreen
 import dev.charlesferreira.treino.ui.screens.RootViewModel
 import dev.charlesferreira.treino.ui.screens.SubScreenHeader
-import dev.charlesferreira.treino.ui.screens.TodayScreen
 import dev.charlesferreira.treino.ui.screens.WorkoutsScreen
+import dev.charlesferreira.treino.ui.today.SummaryScreen
+import dev.charlesferreira.treino.ui.today.TodayScreen
+import androidx.compose.runtime.CompositionLocalProvider
 import dev.charlesferreira.treino.ui.theme.TreinoColors
 
 /** Waits for the first database read, then starts at Hoje, or at the onboarding when empty. */
@@ -66,8 +68,10 @@ private fun TreinoNavHost(start: Any) {
         else -> null
     }
     val back: () -> Unit = { nav.popBackStack() }
+    val overlay = remember { OverlayHost() }
     val profile: () -> Unit = { nav.navigate(ProfileRoute) { launchSingleTop = true } }
 
+    CompositionLocalProvider(LocalOverlayHost provides overlay) {
     Box(Modifier.fillMaxSize()) {
         NavHost(
             navController = nav,
@@ -85,7 +89,14 @@ private fun TreinoNavHost(start: Any) {
                     onBackup = { nav.navigate(BackupRoute) },
                 )
             }
-            composable<TodayRoute> { TodayScreen(onProfile = profile, onCreateWorkout = { nav.selectTab(Tab.WORKOUTS) }) }
+            composable<TodayRoute> {
+                TodayScreen(
+                    onProfile = profile,
+                    onCreateWorkout = { nav.selectTab(Tab.WORKOUTS) },
+                    onManageWorkouts = { nav.selectTab(Tab.WORKOUTS) },
+                    onSummary = { date -> nav.navigate(SummaryRoute(date)) { launchSingleTop = true } },
+                )
+            }
             composable<EvolutionRoute> { EvolutionScreen(onProfile = profile) }
             composable<WorkoutsRoute> { WorkoutsScreen(onProfile = profile) }
             composable<ProfileRoute> {
@@ -97,8 +108,7 @@ private fun TreinoNavHost(start: Any) {
                 )
             }
 
-            composable<EditSetRoute> { PlaceholderScreen("Editar série", back) }
-            composable<SummaryRoute> { PlaceholderScreen("Resumo", back) }
+            composable<SummaryRoute> { SummaryScreen(it.toRoute<SummaryRoute>().date, onClose = back) }
             composable<HistoryDayRoute> { PlaceholderScreen(it.toRoute<HistoryDayRoute>().date, back) }
             composable<ExerciseProgressRoute> { PlaceholderScreen("Progressão", back) }
             composable<WorkoutEditRoute> { PlaceholderScreen("Editar treino", back) }
@@ -119,6 +129,9 @@ private fun TreinoNavHost(start: Any) {
         if (tab != null) {
             TabBar(selected = tab, onSelect = { nav.selectTab(it) }, modifier = Modifier.align(Alignment.BottomCenter))
         }
+        // Sheets of the current screen, over the tab bar.
+        overlay.content?.invoke()
+    }
     }
 }
 

@@ -29,9 +29,10 @@ fun Card(
     borderColor: Color = TreinoColors.Border,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+    cornerRadius: androidx.compose.ui.unit.Dp = 22.dp,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val shape = RoundedCornerShape(22.dp)
+    val shape = RoundedCornerShape(cornerRadius)
     Column(
         modifier = modifier
             .clip(shape)

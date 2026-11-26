@@ -8,13 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -49,11 +47,9 @@ import dev.charlesferreira.treino.ui.components.Icon
 import dev.charlesferreira.treino.ui.components.PrimaryButton
 import dev.charlesferreira.treino.ui.components.SectionLabel
 import dev.charlesferreira.treino.ui.components.TText
-import dev.charlesferreira.treino.ui.components.Tag
 import dev.charlesferreira.treino.ui.components.TextInput
 import dev.charlesferreira.treino.ui.components.Toggle
 import dev.charlesferreira.treino.ui.components.TreinoIcons
-import dev.charlesferreira.treino.ui.nav.TabBarDefaults
 import dev.charlesferreira.treino.ui.theme.TreinoColors
 import dev.charlesferreira.treino.ui.theme.TreinoType
 
@@ -95,68 +91,6 @@ fun OnboardingScreen(onCreateWorkout: () -> Unit, onBackup: () -> Unit) {
         ) {
             PrimaryButton("Criar meu primeiro treino", onClick = { vm.start(name, onCreateWorkout) })
             GhostButton("Já tenho um backup", onClick = onBackup, icon = TreinoIcons.Upload, height = 54.dp)
-        }
-    }
-}
-
-@Composable
-fun TodayScreen(onProfile: () -> Unit, onCreateWorkout: () -> Unit) {
-    val container = appContainer()
-    val vm = viewModel { TodayViewModel(container.repository) }
-    val state by vm.state.collectAsStateWithLifecycle()
-    val s = state ?: return
-    Box(Modifier.fillMaxSize()) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .statusBarsPadding()
-                .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = TabBarDefaults.ContentClearance + 70.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            Row(Modifier.padding(horizontal = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Column(Modifier.weight(1f)) {
-                    TText(s.dateLabel, style = TreinoType.Label)
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        TText(s.workout?.name ?: "Sem treino", style = TreinoType.Title, maxLines = 1)
-                        if (s.workout != null) Icon(TreinoIcons.ChevronDown, tint = TreinoColors.TextFaint)
-                    }
-                }
-                Avatar(s.profileName, onClick = onProfile)
-            }
-            if (s.workout == null) {
-                TText("Crie um treino na aba Treinos.", style = TreinoType.Body, color = TreinoColors.TextDim, modifier = Modifier.padding(horizontal = 6.dp))
-            } else {
-                Row(Modifier.padding(horizontal = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Tag("${s.items.size} exercícios")
-                    Tag("${s.setCount} séries", mono = true)
-                    if (s.started) Tag("em andamento", accent = true)
-                }
-                if (s.items.isNotEmpty()) {
-                    Card(contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp)) {
-                        s.items.forEachIndexed { i, item ->
-                            if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(TreinoColors.Border))
-                            Row(
-                                Modifier.fillMaxWidth().heightIn(min = 52.dp).padding(horizontal = 16.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                TText("${item.number}", style = TreinoType.mono(13.sp, color = TreinoColors.TextFaint), modifier = Modifier.width(18.dp))
-                                TText(item.name, style = TreinoType.Row, modifier = Modifier.weight(1f), maxLines = 1)
-                                TText(item.target, style = TreinoType.mono(12.sp, color = TreinoColors.TextFaint), maxLines = 1)
-                            }
-                        }
-                    }
-                }
-                GhostButton("Nota do dia", onClick = {}, icon = TreinoIcons.Note, height = 44.dp)
-            }
-        }
-        Box(Modifier.align(Alignment.BottomCenter).padding(start = 14.dp, end = 14.dp, bottom = TabBarDefaults.bottomOffset() + 80.dp)) {
-            if (s.workout == null) {
-                PrimaryButton("Criar treino", onClick = onCreateWorkout, icon = TreinoIcons.Plus)
-            } else {
-                PrimaryButton(if (s.started) "Continuar treino" else "Começar treino", onClick = vm::start, icon = TreinoIcons.Play)
-            }
         }
     }
 }

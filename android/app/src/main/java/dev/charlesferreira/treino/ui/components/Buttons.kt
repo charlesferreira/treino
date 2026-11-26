@@ -52,6 +52,9 @@ fun GhostButton(
     icon: TreinoIcon? = null,
     enabled: Boolean = true,
     height: Dp = 50.dp,
+    fontSize: androidx.compose.ui.unit.TextUnit = TreinoType.ButtonGhost.fontSize,
+    iconSize: Dp? = null,
+    contentColor: androidx.compose.ui.graphics.Color = TreinoType.ButtonGhost.color,
 ) {
     PillButton(
         text = text,
@@ -62,7 +65,8 @@ fun GhostButton(
         enabled = enabled,
         height = height,
         background = TreinoColors.Surface,
-        style = TreinoType.ButtonGhost,
+        style = TreinoType.ButtonGhost.copy(fontSize = fontSize, color = contentColor),
+        iconSize = iconSize,
     )
 }
 
@@ -77,6 +81,7 @@ private fun PillButton(
     height: Dp,
     background: androidx.compose.ui.graphics.Color,
     style: TextStyle,
+    iconSize: Dp? = null,
 ) {
     val shape = RoundedCornerShape(height / 2)
     Row(
@@ -91,7 +96,7 @@ private fun PillButton(
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null) Icon(icon, tint = style.color, size = if (height >= 54.dp) 20.dp else 18.dp, strokeWidth = iconStroke)
+        if (icon != null) Icon(icon, tint = style.color, size = iconSize ?: if (height >= 54.dp) 20.dp else 18.dp, strokeWidth = iconStroke)
         TText(text, style = style, maxLines = 1)
     }
 }
