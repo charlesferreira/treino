@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import dev.charlesferreira.treino.domain.backup.BackupSettings
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -16,7 +17,14 @@ data class Settings(
     val vibration: Boolean = true,
     val keepScreenOn: Boolean = false,
     val profileName: String = "",
+    /** "YYYY-MM-DD" of the last export, null before the first. */
+    val lastExport: String? = null,
+    /** Sessions the load review already settled, as [loadReviewKey]. They do not come back. */
+    val reviewedLoads: Set<String> = emptySet(),
 )
+
+/** Key of a reviewed session in [Settings.reviewedLoads]: one exercise in one session. */
+fun loadReviewKey(sessionId: String, exerciseId: String): String = "$sessionId:$exerciseId"
 
 /** Where sound and vibration also have to land: the rest timer reads its own store from a receiver. */
 interface TimerSwitches {
@@ -55,6 +63,16 @@ class SettingsStore(
         dataStore.edit { it[PROFILE_NAME] = name.trim() }
     }
 
+    suspend fun setLastExport(date: String) {
+        dataStore.edit { it[LAST_EXPORT] = date }
+    }
+
+    /** Remembers sessions of the load review (kept as they are, or corrected) so they don't come back. */
+    suspend fun addReviewedLoads(keys: Collection<String>) {
+        if (keys.isEmpty()) return
+        dataStore.edit { it[REVIEWED_LOADS] = (it[REVIEWED_LOADS] ?: emptySet()) + keys }
+    }
+
     /** Applies what a backup carries; a null field leaves the current value. */
     suspend fun apply(backup: BackupSettings) {
         dataStore.edit { prefs ->
@@ -86,6 +104,8 @@ class SettingsStore(
         vibration = this[VIBRATION] ?: true,
         keepScreenOn = this[KEEP_SCREEN_ON] ?: false,
         profileName = this[PROFILE_NAME] ?: "",
+        lastExport = this[LAST_EXPORT],
+        reviewedLoads = this[REVIEWED_LOADS] ?: emptySet(),
     )
 
     private companion object {
@@ -93,5 +113,7 @@ class SettingsStore(
         val VIBRATION = booleanPreferencesKey("vibration")
         val KEEP_SCREEN_ON = booleanPreferencesKey("keep_screen_on")
         val PROFILE_NAME = stringPreferencesKey("profile_name")
+        val LAST_EXPORT = stringPreferencesKey("last_export")
+        val REVIEWED_LOADS = stringSetPreferencesKey("reviewed_loads")
     }
 }

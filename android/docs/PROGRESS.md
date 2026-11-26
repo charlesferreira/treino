@@ -16,7 +16,12 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   `./gradlew :domain:test :app:testDebugUnitTest :app:assembleDebug` passa; Room testado em memória
   com Robolectric (SDK 36). Conferido no AVD "Treino": onboarding, abas, Hoje com o treino de
   exemplo, Perfil (interruptor de som grava no `rest_timer`), spike do timer e ícone.
-- [ ] Fase 2: importar e exportar
+- [x] Fase 2: importar e exportar. Tela Backup (`ui/profile/BackupScreen.kt`): exporta o format 3 pelo
+  "Salvar como" do sistema e importa pelo seletor de arquivos com a prévia antes de substituir.
+  No AVD: um backup do PWA (format 2, 70 dias de 22 jul a 20 nov, com `cardio` antigo) importado
+  pelo seletor, conferido em Hoje, Evolução e Treinos; exportado, puxado com `adb pull`, conferido e
+  reimportado pelo app com os mesmos números. `BackupRoundTripTest` (Robolectric) faz importar →
+  exportar → importar e compara as tabelas.
 - [ ] Fase 3: telas
   - [x] Hoje, primeira parte (`ui/today/`): antes de começar, trocar o treino, treino em andamento
     com o cabeçalho ligado à rolagem, editar série, exercício de tempo, resumo. Testes puros do
@@ -36,7 +41,9 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     puro em `WorkoutsStateTest` e `ExerciseSearchTest`; Room em `WorkoutsRepositoryTest`. Conferido no
     AVD "Treino" contra o PNG de cada design, e no Hoje: "KG/HALTER", passo ±2 e ±2,5 e o treino
     sugerido seguindo a nova ordem.
-  - [ ] Perfil
+  - [x] Perfil (`ui/profile/`): Perfil, Revisar cargas de halteres, Backup e Primeiro uso. Estado puro
+    em `ProfileStateTest`. Conferido no AVD "Treino" contra o PNG de cada design, com a revisão
+    aplicando e mantendo sessões de verdade.
 - [x] Fase 4: timer de verdade. `workout/WorkoutTimer.kt` liga o Room ao timer; regras puras em
   `ui/today/RestPlan.kt` (testes em `RestPlanTest`). No AVD: alarme com a tela apagada disparou 10 ms
   depois do agendado; "Registrar série" na cortina com o processo morto gravou a série no Room e
@@ -210,8 +217,38 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
   - Apagar treino pede confirmação numa folha ("Os dias em que ele foi feito continuam no
     histórico."); duplicar cria "<nome> (cópia)" logo depois do original e abre a cópia.
 
+- Fase 3, Perfil e Fase 2:
+  - Perfil: tocar no nome ou no avatar abre a folha "Seu nome" (como o PWA). Sem nome: "Quem está
+    treinando?". "treinando desde" = o primeiro dia com registro; ano só quando não é o atual. Revisão
+    com 0 sessões: "nada para conferir" e chevron no lugar do selo. Backup: "último em 20 nov" ou
+    "nenhum ainda". Debug (spike e treino de exemplo) continua no fim, só no build debug.
+  - Revisão das cargas: o design é da direção A; mesmo layout e textos nas cores da B, como a folha de
+    equipamento (lima → laranja, Barlow → JetBrains Mono, título sem caixa alta no DM Sans de 30). O
+    âmbar do "anotado" (#FFB454) ficou, porque a B não tem cor para isso. Um exercício por vez, na
+    ordem de quando a tela abriu ("1 de 2" só com mais de um). Linhas: cada sessão sinalizada com a
+    vizinha antes e depois; gráfico: até 3 sessões antes da primeira e depois da última. A linha "Com
+    as correções" segue as escolhas (sem escolha = corrigida; "Por halter" = como está); rótulos na
+    carga máxima anotada e na metade dela. Nada fica escolhido de início. "Aplicar N correção(ões)"
+    grava as divisões (`updateSets`, uma transação) e lembra as sessões decididas; só "Por halter"
+    escolhido vira "Confirmar"; sem escolha o botão fica apagado. "Manter tudo como está" lembra
+    todas as sinalizadas do exercício. Sem decisão, a sessão volta da próxima vez. Acabou tudo: volta
+    ao Perfil. Sem nada: "Nenhuma carga para conferir.".
+  - Sessões decididas (mantidas ou corrigidas) ficam no DataStore (`reviewed_loads`, chave
+    `sessão:exercício`). Como os UUIDs do import são determinísticos, reimportar o mesmo backup não
+    traz de volta o que já foi decidido. Isso não viaja no backup.
+  - Backup: data do último export no DataStore (`last_export`), gravada só quando o arquivo foi
+    escrito. O design não mostra compartilhar, então não há `ACTION_SEND` nem FileProvider. Prévia:
+    "backup do app web" (format 1, 2, cru) ou "backup deste app" (format 3), ", exportado em 20 nov"
+    quando o arquivo diz; séries = séries + tempos (como em Dias); singulares; período com ano quando
+    não é tudo do ano atual; sem programa no arquivo: "O arquivo não traz treinos: entram os do
+    programa de exemplo.". Erro: a mensagem da exceção em laranja claro no cartão do arquivo. Depois
+    de importar, a pilha recomeça em Hoje e abre Evolução (vale para o primeiro uso também).
+  - `PrimaryButton` ganhou `fontSize`, `iconSize` e `iconStroke` opcionais; `TextInput`,
+    `keyboardActions`. `OnboardingScreen` mudou para `ui/profile/` sem mudar o layout (já batia com o
+    design); `Screens.kt` ficou só com `SubScreenHeader`.
+
 ## Próximo passo
 
-Perfil (Fase 3); a Fase 2 (tela de backup) continua pendente. Na Evolução, falta ver
-com um backup real do PWA (muitos meses de dias importados). A Fase 4 ainda
+Fases 2 e 3 prontas. Falta testar com um backup real exportado do PWA do celular (o teste usou
+um gerado no formato dele) e a Fase 5 (APK assinado). A Fase 4 ainda
 precisa do S23 (`SPIKE.md`, "Para testar no S23", itens 9 a 11).

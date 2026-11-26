@@ -201,6 +201,11 @@ class TreinoRepository(
         entries.upsertSet(current.copy(weightKg = weightKg, reps = reps))
     }
 
+    /** The load review's "Era o par": each set gets the load given (the suggestion), all or nothing. */
+    suspend fun updateSets(sets: List<SetEntry>) = db.withTransaction {
+        sets.forEach { updateSet(it.id, it.weightKg, it.reps) }
+    }
+
     /** Removes the set and renumbers the ones after it. */
     suspend fun deleteSet(id: String) = db.withTransaction {
         val set = entries.getSet(id) ?: return@withTransaction

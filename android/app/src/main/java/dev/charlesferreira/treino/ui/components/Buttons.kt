@@ -29,17 +29,21 @@ fun PrimaryButton(
     icon: TreinoIcon? = null,
     enabled: Boolean = true,
     height: Dp = 54.dp,
+    fontSize: androidx.compose.ui.unit.TextUnit = TreinoType.Button.fontSize,
+    iconSize: Dp? = null,
+    iconStroke: Float = 2.6f,
 ) {
     PillButton(
         text = text,
         onClick = onClick,
         modifier = modifier,
         icon = icon,
-        iconStroke = 2.6f,
+        iconStroke = iconStroke,
         enabled = enabled,
         height = height,
         background = TreinoColors.Accent,
-        style = TreinoType.Button,
+        style = TreinoType.Button.copy(fontSize = fontSize),
+        iconSize = iconSize,
     )
 }
 

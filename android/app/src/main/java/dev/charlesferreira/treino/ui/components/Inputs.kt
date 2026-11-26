@@ -149,6 +149,7 @@ fun TextInput(
     height: androidx.compose.ui.unit.Dp = 48.dp,
     fontSize: androidx.compose.ui.unit.TextUnit = 15.sp,
     keyboardOptions: androidx.compose.foundation.text.KeyboardOptions = androidx.compose.foundation.text.KeyboardOptions.Default,
+    keyboardActions: androidx.compose.foundation.text.KeyboardActions = androidx.compose.foundation.text.KeyboardActions.Default,
 ) {
     val shape = RoundedCornerShape(14.dp)
     val style = TreinoType.Body.copy(fontSize = fontSize, lineHeight = fontSize * 1.3f)
@@ -159,6 +160,7 @@ fun TextInput(
         textStyle = style,
         singleLine = true,
         keyboardOptions = keyboardOptions,
+        keyboardActions = keyboardActions,
         cursorBrush = androidx.compose.ui.graphics.SolidColor(TreinoColors.Accent),
         decorationBox = { inner ->
             Box(

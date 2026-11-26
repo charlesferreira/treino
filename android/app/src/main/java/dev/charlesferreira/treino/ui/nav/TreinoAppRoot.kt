@@ -32,9 +32,10 @@ import dev.charlesferreira.treino.debug.TimerSpikeScreen
 import dev.charlesferreira.treino.ui.evolution.EvolutionScreen
 import dev.charlesferreira.treino.ui.evolution.ExerciseProgressScreen
 import dev.charlesferreira.treino.ui.evolution.HistoryDayScreen
-import dev.charlesferreira.treino.ui.screens.OnboardingScreen
-import dev.charlesferreira.treino.ui.screens.PlaceholderScreen
-import dev.charlesferreira.treino.ui.screens.ProfileScreen
+import dev.charlesferreira.treino.ui.profile.BackupScreen
+import dev.charlesferreira.treino.ui.profile.LoadReviewScreen
+import dev.charlesferreira.treino.ui.profile.OnboardingScreen
+import dev.charlesferreira.treino.ui.profile.ProfileScreen
 import dev.charlesferreira.treino.ui.screens.RootViewModel
 import dev.charlesferreira.treino.ui.screens.SubScreenHeader
 import dev.charlesferreira.treino.ui.workouts.ExercisePickerScreen
@@ -154,8 +155,18 @@ private fun TreinoNavHost(start: Any) {
                     },
                 )
             }
-            composable<BackupRoute> { PlaceholderScreen("Backup", back) }
-            composable<LoadReviewRoute> { PlaceholderScreen("Revisar cargas antigas", back) }
+            composable<BackupRoute> {
+                BackupScreen(
+                    onBack = back,
+                    // Everything was replaced: start over at Hoje (from the first use too), then
+                    // show the days that came in.
+                    onImported = {
+                        nav.navigate(TodayRoute) { popUpTo(nav.graph.id) { inclusive = true } }
+                        nav.selectTab(Tab.EVOLUTION)
+                    },
+                )
+            }
+            composable<LoadReviewRoute> { LoadReviewScreen(onBack = back) }
             if (BuildConfig.DEBUG) {
                 composable<TimerSpikeRoute> {
                     Column(Modifier.fillMaxSize().statusBarsPadding().padding(start = 14.dp, end = 14.dp, top = 6.dp)) {

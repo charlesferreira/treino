@@ -2,7 +2,6 @@ package dev.charlesferreira.treino.ui.screens
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import dev.charlesferreira.treino.data.Settings
 import dev.charlesferreira.treino.data.TreinoRepository
 import dev.charlesferreira.treino.domain.Exercise
 import dev.charlesferreira.treino.domain.ExerciseKind
@@ -29,28 +28,6 @@ class OnboardingViewModel(private val repository: TreinoRepository) : ViewModel(
             repository.seedCatalog()
             then()
         }
-    }
-}
-
-class ProfileViewModel(private val repository: TreinoRepository) : ViewModel() {
-    val settings: StateFlow<Settings> = repository.settings.settings
-        .stateIn(viewModelScope, SharingStarted.Eagerly, Settings())
-
-    fun setSound(on: Boolean) {
-        viewModelScope.launch { repository.settings.setSound(on) }
-    }
-
-    fun setVibration(on: Boolean) {
-        viewModelScope.launch { repository.settings.setVibration(on) }
-    }
-
-    fun setKeepScreenOn(on: Boolean) {
-        viewModelScope.launch { repository.settings.setKeepScreenOn(on) }
-    }
-
-    /** Debug only. */
-    fun createSampleWorkout() {
-        viewModelScope.launch { dev.charlesferreira.treino.debug.SampleData.createSuperiorB(repository) }
     }
 }
 
