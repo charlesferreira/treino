@@ -1,5 +1,6 @@
 package dev.charlesferreira.treino.ui.today
 
+import androidx.compose.runtime.mutableStateOf
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
@@ -63,6 +64,7 @@ fun TodayScreen(
     // The rest and the between-sets notification need the permission; asked when the workout starts.
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
     val ui = state ?: return
+    var launch by remember { mutableStateOf<StartLaunch?>(null) }
     // A workout left open for hours: asked once, with the end at the last set.
     val running = ui.started && !ui.ended
     val latestUi by rememberUpdatedState(ui)
@@ -99,6 +101,8 @@ fun TodayScreen(
             else -> vm.finish { onSummary(vm.date) }
         }
     }
+
+    launch?.let { l -> StartFlood(l, onCovered = { vm.start() }, onDone = { launch = null }) }
 
     if (ui.started && ui.workout != null) {
         val running = !ui.ended
@@ -160,13 +164,14 @@ fun TodayScreen(
             onSwitch = { vm.openSheet(TodaySheet.Switch) },
             onProfile = onProfile,
             onNote = { vm.openSheet(TodaySheet.Note) },
-            onStart = {
+            onStart = { origin ->
                 if (Build.VERSION.SDK_INT >= 33 &&
                     ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
                 ) {
                     notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
-                vm.start()
+                // The workout starts once the orange has covered the screen.
+                if (launch == null) launch = StartLaunch(origin, ui.workout?.name.orEmpty())
             },
             onCreateWorkout = onCreateWorkout,
         )

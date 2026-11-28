@@ -1,6 +1,18 @@
 package dev.charlesferreira.treino.ui.today
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import dev.charlesferreira.treino.ui.components.Icon
+import dev.charlesferreira.treino.ui.components.TreinoIcons
+import dev.charlesferreira.treino.ui.evolution.equipmentTag
+import dev.charlesferreira.treino.ui.workouts.EquipmentSheet
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,10 +44,10 @@ import dev.charlesferreira.treino.ui.theme.TreinoType
 data class HistoryRow(val date: String, val top: String, val detail: String?, val up: Boolean)
 
 /**
- * The exercise's last [limit] sessions before [today], newest first. [HistoryRow.up] marks a top
+ * Every session of the exercise before [today] (or the last [limit]), newest first. [HistoryRow.up] marks a top
  * load above the session before it.
  */
-fun historyRows(days: List<ExerciseDay>, today: String, limit: Int = 6): List<HistoryRow> {
+fun historyRows(days: List<ExerciseDay>, today: String, limit: Int = Int.MAX_VALUE): List<HistoryRow> {
     val past = days.filter { it.date < today && (it.sets.isNotEmpty() || it.times.isNotEmpty()) }.sortedBy { it.date }
     return past.mapIndexed { i, day ->
         val max = day.sets.maxOfOrNull { it.weightKg }
@@ -49,7 +61,7 @@ fun historyRows(days: List<ExerciseDay>, today: String, limit: Int = 6): List<Hi
     }.takeLast(limit).reversed()
 }
 
-/** "Histórico": the last sessions of the exercise, opened from its name in the workout. */
+/** "Histórico": every past session of the exercise, scrolling, opened from its name in the workout. */
 @Composable
 fun ExerciseHistorySheet(exerciseId: String, today: String, onDismiss: () -> Unit) {
     val container = appContainer()
@@ -57,8 +69,39 @@ fun ExerciseHistorySheet(exerciseId: String, today: String, onDismiss: () -> Uni
     val exercise by flow.collectAsStateWithLifecycle(null)
     val historyFlow = remember(exerciseId) { container.repository.observeExerciseHistory(exerciseId) }
     val days by historyFlow.collectAsStateWithLifecycle(null)
+    var editing by remember(exerciseId) { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val current = exercise
+    if (editing && current != null) {
+        EquipmentSheet(
+            exercise = current,
+            prescription = null,
+            onSave = { updated ->
+                scope.launch { container.repository.updateExercise(updated) }
+                editing = false
+            },
+            onDismiss = { editing = false },
+        )
+        return
+    }
     Sheet(onDismiss) {
         SheetTitle(exercise?.name.orEmpty())
+        // Equipment, unilateral or bodyweight can be fixed here, mid-workout.
+        current?.let { ex ->
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(TreinoColors.Surface, RoundedCornerShape(14.dp))
+                    .clickable(role = Role.Button, onClick = { editing = true })
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TText("Equipamento", style = TreinoType.Row, modifier = Modifier.weight(1f), maxLines = 1)
+                TText(equipmentTag(ex) ?: "Outro", style = TreinoType.Body, color = TreinoColors.TextDim, maxLines = 1)
+                Icon(TreinoIcons.ChevronRight, tint = TreinoColors.TextFaint, modifier = Modifier.padding(start = 6.dp))
+            }
+        }
         val rows = days?.let { historyRows(it, today) } ?: return@Sheet
         if (rows.isEmpty()) {
             TText("Primeira vez.", style = TreinoType.Body, color = TreinoColors.TextDim)

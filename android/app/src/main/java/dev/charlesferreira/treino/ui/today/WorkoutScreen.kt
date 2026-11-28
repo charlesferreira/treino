@@ -79,12 +79,19 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.foundation.Canvas
+import dev.chrisbanes.haze.hazeSource
+import dev.chrisbanes.haze.rememberHazeState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import dev.charlesferreira.treino.domain.Equipment
 import dev.charlesferreira.treino.domain.PtBr
 import dev.charlesferreira.treino.domain.SetEntry
 import dev.charlesferreira.treino.ui.components.Card
@@ -146,11 +153,14 @@ fun WorkoutScreen(
     val anchor = remember { ItemAnchor() }
     val clearance = maxOf(TabBarDefaults.contentClearance() + bottomExtra, ime + 12.dp)
 
+    val haze = rememberHazeState()
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val viewport = maxHeight
         Column(
             Modifier
                 .fillMaxSize()
+                // What passes under the collapsed header shows through it, blurred.
+                .hazeSource(haze)
                 .verticalScroll(scroll)
                 // A short workout still scrolls the whole collapse distance, so the header can
                 // collapse; the room left over stays under "Terminar treino".
@@ -204,6 +214,7 @@ fun WorkoutScreen(
         }
         WorkoutHeader(
             v = v,
+            haze = haze,
             statusBar = status,
             statusOffset = statusOffset,
             dateLabel = ui.dateLabel,
@@ -230,15 +241,34 @@ private fun RowScope.CompactRow(item: ItemUi) {
             maxLines = 1,
         )
     } else {
-        Box(Modifier.size(22.dp), contentAlignment = Alignment.Center) {
-            TText("${item.number}", style = TreinoType.mono(13.sp, color = TreinoColors.TextFaint), maxLines = 1)
-        }
+        ProgressMark(item.done, item.total)
         RowName(item)
-        TText(
-            if (item.done > 0) "${item.done}/${item.total}" else item.target,
-            style = TreinoType.mono(12.sp, color = TreinoColors.TextFaint),
-            maxLines = 1,
-        )
+        TText(item.target, style = TreinoType.mono(12.sp, color = TreinoColors.TextFaint), maxLines = 1)
+    }
+}
+
+/**
+ * An exercise not done yet: an empty circle that fills clockwise from the top with each set, like
+ * a clock (2 of 3 is two thirds). When done it becomes the [DoneMark].
+ */
+@Composable
+private fun ProgressMark(done: Int, total: Int) {
+    val fraction = if (total <= 0) 0f else (done.toFloat() / total).coerceIn(0f, 1f)
+    val sweep by animateFloatAsState(fraction * 360f, tween(OPEN_MS), label = "progressMark")
+    Canvas(Modifier.size(22.dp).semantics { contentDescription = "$done de $total séries" }) {
+        val stroke = 1.5.dp.toPx()
+        drawCircle(TreinoColors.TextFaint, radius = size.minDimension / 2 - stroke / 2, style = Stroke(stroke))
+        if (sweep > 0f) {
+            val inset = stroke + 1.5.dp.toPx()
+            drawArc(
+                TreinoColors.Accent,
+                startAngle = -90f,
+                sweepAngle = sweep,
+                useCenter = true,
+                topLeft = Offset(inset, inset),
+                size = Size(size.width - inset * 2, size.height - inset * 2),
+            )
+        }
     }
 }
 
@@ -415,16 +445,16 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
     var focused by remember(item.item.id, next) { mutableStateOf(CellFocus.NONE) }
     ExerciseBody {
         ExerciseTitle(item, onName = { actions.onHistory(item) }) {
-            if (exercise.countsTwoDumbbells) Tag("Halteres 2×", icon = TreinoIcons.Dumbbell)
+            twoSidesTag(exercise)?.let { Tag(it, icon = if (exercise.equipment == Equipment.DUMBBELL) TreinoIcons.Dumbbell else null) }
             if (item.item.restSec > 0) Tag(restLabel(item.item.restSec))
-            item.maxKg?.let { Tag("máx ${PtBr.kg(it)}") }
+            if (!exercise.bodyweight) item.maxKg?.let { Tag("máx ${PtBr.kg(it)}") }
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             TableRow {
                 val style = TreinoType.Label.copy(fontSize = 11.sp, lineHeight = 15.sp, letterSpacing = 0.06.em)
                 TText("SÉRIE", style = style, maxLines = 1, modifier = Modifier.width(36.dp))
                 TText(item.lastDate?.let { PtBr.shortDate(it).uppercase() }.orEmpty(), style = style, maxLines = 1, modifier = Modifier.weight(1f))
-                TText(unitLabel(exercise).uppercase(), style = style, maxLines = 1, textAlign = TextAlign.Center, modifier = Modifier.width(72.dp))
+                TText(if (exercise.bodyweight) "" else unitLabel(exercise).uppercase(), style = style, maxLines = 1, textAlign = TextAlign.Center, modifier = Modifier.width(72.dp))
                 TText("REPS", style = style, maxLines = 1, textAlign = TextAlign.Center, modifier = Modifier.width(60.dp))
                 Box(Modifier.width(36.dp))
             }
@@ -436,7 +466,7 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
                     logged != null -> TableRow(Modifier.clickable(role = Role.Button) { actions.onEditSet(logged) }) {
                         SetNumber(position, accent = false)
                         LastText(last)
-                        Cell(PtBr.number(logged.weightKg), Modifier.width(72.dp))
+                        if (exercise.bodyweight) Box(Modifier.width(72.dp)) else Cell(PtBr.number(logged.weightKg), Modifier.width(72.dp))
                         Cell("${logged.reps}", Modifier.width(60.dp))
                         Box(Modifier.size(36.dp, 28.dp), contentAlignment = Alignment.CenterStart) {
                             // The set just logged pops its check in; older ones just show.
@@ -454,7 +484,7 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
                     ) {
                         SetNumber(position, accent = true)
                         LastText(last)
-                        NumberCell(
+                        if (exercise.bodyweight) Box(Modifier.width(72.dp)) else NumberCell(
                             value = PtBr.number(draft.weightKg),
                             width = 72.dp,
                             highlighted = focused != CellFocus.REPS,
@@ -479,7 +509,7 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
                         TableRow(Modifier.alpha(0.55f)) {
                             SetNumber(position, accent = false)
                             LastText(last)
-                            Cell(prefill?.let { PtBr.number(it.weightKg) }.orEmpty(), Modifier.width(72.dp))
+                            if (exercise.bodyweight) Box(Modifier.width(72.dp)) else Cell(prefill?.let { PtBr.number(it.weightKg) }.orEmpty(), Modifier.width(72.dp))
                             Cell(prefill?.let { "${it.reps}" }.orEmpty(), Modifier.width(60.dp))
                             Box(Modifier.width(36.dp), contentAlignment = Alignment.CenterStart) {
                                 Box(Modifier.size(28.dp).border(2.dp, TreinoColors.SurfaceHigh, CircleShape))
@@ -509,7 +539,7 @@ private enum class CellFocus { NONE, WEIGHT, REPS }
 fun NextSetSteppers(item: ItemUi, draft: SetDraft, onStepWeight: (up: Boolean) -> Unit, onStepReps: (up: Boolean) -> Unit) {
     val exercise = item.exercise
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Stepper(
+        if (!exercise.bodyweight) Stepper(
             value = PtBr.kg(draft.weightKg),
             onMinus = { onStepWeight(false) },
             onPlus = { onStepWeight(true) },

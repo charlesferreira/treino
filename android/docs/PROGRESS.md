@@ -218,6 +218,30 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     modo treino em si não foi aberto no S23, para não criar um dia de treino nos dados reais.
   - Fica como está no design: o "Pular" só na folha de descanso (a pílula tem +15s) e o contador
     "1/6" contando séries enquanto a barra mostra um segmento por exercício.
+- [x] Primeiro treino de verdade com o modo treino (28 nov, Superior C no S23; resultado em
+  `SPIKE.md`, "Treino de 28 nov"). Corrigido:
+  - Notificação do descanso: uma barra só, que esvazia segundo a segundo (o `RestTimerService`
+    reposta a notificação a cada 1 s); os segmentos por exercício ficam na notificação entre séries.
+    Saiu o nome do treino da linha de cima.
+  - Começar treino: o laranja do botão cresce de onde foi tocado até cobrir a tela, mostra "Bom
+    treino" e o nome do treino, e some por cima do treino já sem abas (`StartFlood`, cerca de 1,3 s,
+    com vibração `CONFIRM`).
+  - Linhas recolhidas: um círculo que enche como relógio a cada série (2 de 3 = dois terços) no
+    lugar do número e do "2/3"; feito vira o check. À direita fica a meta.
+  - Folhas: todas arrastam para baixo para fechar (96 dp ou um puxão rápido) e cedem um pouco para
+    cima, voltando com mola. A folha de descanso minimiza arrastando a alça. Saiu a linha "Próxima,
+    série 1" quando os steppers da próxima série estão ali.
+  - Folha do nome do exercício: todas as sessões, rolando, e uma linha "Equipamento" que abre o
+    editor de equipamento no meio do treino.
+  - Unilateral: o interruptor "Volume conta 2" agora vale para cabo, máquina e outro ("Unilateral",
+    kg/lado), não só halteres. Nunca para barra ou peso corporal.
+  - Peso corporal: o cartão mostra só reps (sem coluna de kg nem stepper de carga), a série é
+    gravada com 0 kg mesmo que o histórico importado traga carga, e o texto vira "12 reps".
+  - Cabeçalho do treino com vidro fosco: o que rola por baixo aparece desfocado (Haze 2.1,
+    `haze-blur`), com um véu escuro por cima.
+  - Testes: `GymFeedbackTest`. Conferido no AVD: animação de início, arraste da folha de descanso,
+    círculo parcial, vidro fosco, folha do exercício com equipamento, peso corporal e a barra da
+    notificação esvaziando.
 
 ## Decisões tomadas sozinho
 

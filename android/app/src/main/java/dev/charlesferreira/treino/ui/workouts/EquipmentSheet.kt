@@ -132,7 +132,16 @@ fun EquipmentSheet(
                                 }
                                 Toggle(draft.countsTwoDumbbells, { draft = draft.copy(countsTwoDumbbells = it) })
                             }
-                            Equipment.MACHINE -> Field {
+                            Equipment.BARBELL, Equipment.BODYWEIGHT -> Unit
+                            else -> Field {
+                                Column(Modifier.weight(1f)) {
+                                    TText("Unilateral", style = TreinoType.Body.copy(fontWeight = FontWeight.W600))
+                                    TText("Um lado por vez, volume conta 2", style = TreinoType.Body.copy(fontSize = 13.sp, lineHeight = 18.sp), color = TreinoColors.TextFaint)
+                                }
+                                Toggle(draft.countsTwoDumbbells, { draft = draft.copy(countsTwoDumbbells = it) })
+                            }
+                        }
+                        if (draft.equipment == Equipment.MACHINE) Field {
                                 TText("Peso da placa", style = TreinoType.Body.copy(fontWeight = FontWeight.W600), modifier = Modifier.weight(1f))
                                 Stepper(
                                     PtBr.kg(draft.plateKg),
@@ -146,9 +155,7 @@ fun EquipmentSheet(
                                     minusEnabled = draft.plateKg > PLATE_STEP,
                                 )
                             }
-                            else -> Unit
-                        }
-                        Column(
+                        if (draft.equipment != Equipment.BODYWEIGHT) Column(
                             Modifier.fillMaxWidth().bottomBorder().padding(horizontal = 4.dp, vertical = 14.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {

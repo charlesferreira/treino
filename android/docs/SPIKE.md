@@ -152,6 +152,24 @@ Primeiro uso real, com o treino de verdade (Superior C) e o backup do PWA import
 | Tela de bloqueio | O cartão não aparece. O aparelho está com `lockscreen_minimizing_notification=1` (Tela de bloqueio > Notificações mostrando só ícones). `dumpsys notification` mostra `PROMOTED_ONGOING`, `vis=PUBLIC`, importância 2. Falta testar com as notificações em cartão e ver se a Now Bar pega. |
 | Itens 2 a 11 abaixo | Ainda não testados no aparelho. |
 
+## Treino de 28 nov (S23, release de 26 nov, Superior C)
+
+Primeiro treino com o modo treino. Itens 2 a 11 abaixo continuam sem teste formal.
+
+| Visto | Resultado e o que mudou |
+|---|---|
+| Notificação do descanso | A contagem só no relógio pequeno ao lado do título não dá leitura; a barra por exercício ficou poluída e estranha. Agora é uma barra só que esvazia com o descanso, atualizada a cada segundo pelo serviço, e sem o nome do treino na linha de cima. Falta ver na One UI. |
+| Espaço antes do relógio | Na cortina, "Descanso  00:42" saiu com espaço (o U+2003 de 26 nov funcionou). |
+| Começar treino | Começava seco. Entrou a animação de início (laranja cobrindo a tela com o nome do treino). |
+| Cronômetro do treino e pílula do descanso | Bons, sem mudança. |
+| Nome do exercício | A folha tinha alça que não arrastava, e com uma sessão só repetia o que já está na tela. Com várias sessões ficou interessante. Agora: arrasta para fechar, mostra todas as sessões e tem o equipamento. Ele esperava que o toque fechasse o exercício no acordeão; fica em aberto. |
+| Exercício terminado aberto de novo | Mostra "Registrar série 4" (série a mais). Não esperado; fica em aberto para decidir. |
+| Linha recolhida pela metade | "2/3" pouco claro; virou círculo que enche como relógio. |
+| Folha de descanso | "Próxima, série 1" não dizia nada e a alça não minimizava. Saiu a linha; a alça arrasta para minimizar. |
+| Elevação lateral no cabo | Unilateral, precisa contar 2 como os halteres. Interruptor "Unilateral" no equipamento do cabo. |
+| Cabeçalho translúcido | O texto passava nítido por trás. Agora é vidro fosco. |
+| Abdômen com elevação de pernas | Sem carga; o histórico importado trazia 50 × 0. Equipamento "Peso corporal" agora registra só reps. |
+
 ## Para testar no S23
 
 Desde 26 nov o S23 tem o **release** assinado (`~/Downloads/treino-release-2026-11-26.apk`). A tela do

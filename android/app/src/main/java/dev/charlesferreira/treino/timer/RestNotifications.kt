@@ -43,13 +43,12 @@ class RestNotifications(private val context: Context) {
         manager.createNotificationChannels(listOf(rest, done))
     }
 
-    fun ongoing(state: RestState): Notification {
+    fun ongoing(state: RestState, now: Long = System.currentTimeMillis()): Notification {
         val builder = Notification.Builder(context, CHANNEL_REST)
             .setSmallIcon(R.drawable.ic_notification)
             .setColor(ORANGE)
             .setContentTitle(beforeClock("Descanso"))
             .setContentText("${state.exerciseName}, ${state.setLabel}, ${state.target}")
-            .setSubText(state.workoutName)
             .setContentIntent(openIntent())
             .setOngoing(true)
             .setOnlyAlertOnce(true)
@@ -65,8 +64,28 @@ class RestNotifications(private val context: Context) {
         if (Build.VERSION.SDK_INT >= 31) {
             builder.setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
         }
-        applyProgress(builder, state.progress, promote = true)
+        applyRestBar(builder, state, now)
         return builder.build()
+    }
+
+    /**
+     * The rest itself as one bar that empties, ticked by [RestTimerService] once a second. The
+     * workout's per-exercise segments stay on the between-sets notification.
+     */
+    private fun applyRestBar(builder: Notification.Builder, state: RestState, now: Long) {
+        val total = (state.totalMs / 1000).toInt().coerceAtLeast(1)
+        val left = ((state.remainingMs(now) + 999) / 1000).toInt().coerceIn(0, total)
+        if (Build.VERSION.SDK_INT >= 36) {
+            builder.setStyle(
+                Notification.ProgressStyle()
+                    .setStyledByProgress(true)
+                    .setProgressSegments(listOf(Notification.ProgressStyle.Segment(total).setColor(ORANGE)))
+                    .setProgress(left),
+            )
+            requestPromotion(builder)
+        } else {
+            builder.setProgress(total, left, false)
+        }
     }
 
     fun done(state: RestState): Notification {

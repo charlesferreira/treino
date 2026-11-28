@@ -1,6 +1,11 @@
 package dev.charlesferreira.treino.ui.today
 
 import androidx.compose.foundation.background
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.HazeColorEffect
+import dev.chrisbanes.haze.blur.hazeBlur
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,6 +61,8 @@ import dev.charlesferreira.treino.ui.theme.TreinoType
 @Composable
 fun WorkoutHeader(
     v: HeaderValues,
+    /** Frosted glass: the list scrolling under the collapsed header is blurred behind it. */
+    haze: HazeState? = null,
     statusBar: Dp,
     statusOffset: Dp,
     dateLabel: String,
@@ -76,7 +83,23 @@ fun WorkoutHeader(
     Layout(
         modifier = Modifier
             .fillMaxWidth()
-            .background(TreinoColors.Background.copy(alpha = v.backgroundAlpha))
+            .then(
+                if (haze == null) {
+                    Modifier.background(TreinoColors.Background.copy(alpha = v.backgroundAlpha))
+                } else {
+                    // Blur at full strength once collapsed, with a lighter wash than the plain fill.
+                    val strength = (v.backgroundAlpha / 0.94f).coerceIn(0f, 1f)
+                    Modifier.hazeBlur(
+                        HazeInput.Sources(haze),
+                        HazeBlurStyle {
+                            blurRadius(24.dp)
+                            backgroundColor(TreinoColors.Background)
+                            colorEffects(listOf(HazeColorEffect.tint(TreinoColors.Background.copy(alpha = 0.72f))))
+                            alpha(strength)
+                        },
+                    )
+                },
+            )
             .drawBehind {
                 val y = size.height - 0.5.dp.toPx()
                 drawLine(Color.White.copy(alpha = v.borderAlpha), Offset(0f, y), Offset(size.width, y), 1.dp.toPx())

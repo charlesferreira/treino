@@ -338,6 +338,9 @@ data class EquipmentDraft(
     val stepKg: Double?,
     val plateKg: Double,
 ) {
+    /** A pair of dumbbells, or one side at a time on a cable, machine or other; never a barbell or the body. */
+    val canCountTwo: Boolean get() = equipment != Equipment.BARBELL && equipment != Equipment.BODYWEIGHT
+
     /** Another equipment starts at its default step; dumbbells start counting 2. */
     fun select(eq: Equipment): EquipmentDraft = if (eq == equipment) {
         this
@@ -364,7 +367,7 @@ data class EquipmentDraft(
 
     fun applyTo(exercise: Exercise): Exercise = exercise.copy(
         equipment = equipment,
-        countsTwoDumbbells = equipment == Equipment.DUMBBELL && countsTwoDumbbells,
+        countsTwoDumbbells = canCountTwo && countsTwoDumbbells,
         stepKg = stepKg,
         plateKg = if (equipment == Equipment.MACHINE) plateKg.takeIf { it != Steps.DEFAULT_PLATE_KG } else exercise.plateKg,
     )

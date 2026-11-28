@@ -1,6 +1,21 @@
 package dev.charlesferreira.treino.ui.today
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.gestures.DraggableState
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.layout.offset
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -65,11 +80,18 @@ fun Sheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
             val shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
             // Above the keyboard when it is open, else above the navigation bar.
             val inset = WindowInsets.ime.union(WindowInsets.navigationBars).asPaddingValues().calculateBottomPadding()
+            val drag = rememberSheetDrag(onDismiss)
             Column(
                 Modifier
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .sheetMotion()
+                    .offset { IntOffset(0, drag.offset.value.roundToInt()) }
+                    .draggable(
+                        orientation = Orientation.Vertical,
+                        state = drag.state,
+                        onDragStopped = { velocity -> drag.release(velocity) },
+                    )
                     .clip(shape)
                     .background(TreinoColors.Card, shape)
                     .drawBehind {
@@ -89,6 +111,45 @@ fun Sheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
                 content()
             }
         }
+    }
+}
+
+/**
+ * Pulling a sheet: down follows the finger and closes it past 96 dp or on a fling; up gives a
+ * little and springs back, so the grab always answers.
+ */
+internal class SheetDrag(
+    val offset: Animatable<Float, AnimationVector1D>,
+    private val scope: CoroutineScope,
+    private val closeAt: Float,
+    private val stretch: Float,
+    private val onDismiss: () -> Unit,
+) {
+    private var closing = false
+    val state = DraggableState { delta ->
+        val now = offset.value
+        val next = if (now + delta < 0f) (now + delta * 0.3f).coerceAtLeast(-stretch) else now + delta
+        scope.launch { offset.snapTo(next) }
+    }
+
+    fun release(velocity: Float) {
+        if (closing) return
+        if (offset.value > closeAt || velocity > 1500f) {
+            closing = true
+            onDismiss()
+        } else {
+            scope.launch { offset.animateTo(0f, spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow)) }
+        }
+    }
+}
+
+@Composable
+internal fun rememberSheetDrag(onDismiss: () -> Unit): SheetDrag {
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val dismiss by rememberUpdatedState(onDismiss)
+    return remember {
+        with(density) { SheetDrag(Animatable(0f), scope, 96.dp.toPx(), 24.dp.toPx()) { dismiss() } }
     }
 }
 

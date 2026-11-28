@@ -72,13 +72,16 @@ data class ProgressUi(
     }
 }
 
-fun equipmentTag(exercise: Exercise): String? = when (exercise.equipment) {
-    Equipment.DUMBBELL -> if (exercise.countsTwoDumbbells) "Halteres 2×" else "Halter"
-    Equipment.BARBELL -> "Barra"
-    Equipment.MACHINE -> "Máquina"
-    Equipment.CABLE -> "Polia"
-    Equipment.BODYWEIGHT -> "Peso corporal"
-    Equipment.OTHER -> null
+fun equipmentTag(exercise: Exercise): String? {
+    val base = when (exercise.equipment) {
+        Equipment.DUMBBELL -> return if (exercise.countsTwoDumbbells) "Halteres 2×" else "Halter"
+        Equipment.BARBELL -> "Barra"
+        Equipment.MACHINE -> "Máquina"
+        Equipment.CABLE -> "Cabo"
+        Equipment.BODYWEIGHT -> "Peso corporal"
+        Equipment.OTHER -> null
+    }
+    return if (exercise.countsTwoDumbbells) listOfNotNull(base, "unilateral").joinToString(", ").replaceFirstChar { it.uppercase() } else base
 }
 
 fun buildProgress(exercise: Exercise, days: List<ExerciseDay>): ProgressUi {

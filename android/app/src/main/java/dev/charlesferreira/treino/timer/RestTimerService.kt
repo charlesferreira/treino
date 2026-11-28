@@ -153,7 +153,25 @@ class RestTimerService : Service() {
         }
     }
 
+    /** Re-posts the rest notification every second so its bar empties; stops when the rest ends. */
+    private val tick = object : Runnable {
+        override fun run() {
+            val state = store.load() ?: return
+            if (state.finished || ringing) return
+            val now = System.currentTimeMillis()
+            if (RestMath.isDue(state, now)) return
+            notifications.notifyOngoing(state)
+            main.postDelayed(this, TICK_MS - (now - state.startedAtMs) % TICK_MS)
+        }
+    }
+
+    private fun startTicking() {
+        main.removeCallbacks(tick)
+        main.postDelayed(tick, TICK_MS)
+    }
+
     private fun goForeground(notification: Notification) {
+        startTicking()
         startForeground(RestNotifications.ID_REST, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
         notifications.logPromotionState(notification)
     }
@@ -177,6 +195,7 @@ class RestTimerService : Service() {
         private const val WAKE_LOCK_TIMEOUT_MS = 10_000L
         private const val VIBRATION_MS = 1_200L
         private const val STALE_MS = 60_000L
+        private const val TICK_MS = 1_000L
 
         private const val EXTRA_DURATION_MS = "duration_ms"
         private const val EXTRA_WORKOUT = "workout"

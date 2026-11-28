@@ -1,5 +1,12 @@
 package dev.charlesferreira.treino.ui.today
 
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,7 +56,8 @@ fun StartScreen(
     onSwitch: () -> Unit,
     onProfile: () -> Unit,
     onNote: () -> Unit,
-    onStart: () -> Unit,
+    /** Gets the button's center in the window, where the start animation grows from. */
+    onStart: (origin: Offset) -> Unit,
     onCreateWorkout: () -> Unit,
 ) {
     Box(Modifier.fillMaxSize()) {
@@ -112,7 +120,13 @@ fun StartScreen(
             if (ui.workout == null) {
                 PrimaryButton("Criar treino", onClick = onCreateWorkout, icon = TreinoIcons.Plus)
             } else {
-                PrimaryButton("Começar treino", onClick = onStart, icon = TreinoIcons.Play)
+                var origin by remember { mutableStateOf(Offset.Zero) }
+                PrimaryButton(
+                    "Começar treino",
+                    onClick = { onStart(origin) },
+                    icon = TreinoIcons.Play,
+                    modifier = Modifier.onGloballyPositioned { origin = it.boundsInWindow().center },
+                )
             }
         }
     }

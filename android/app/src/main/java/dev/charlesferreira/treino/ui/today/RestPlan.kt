@@ -17,10 +17,14 @@ data class NextUp(val item: ItemUi, val position: Int, val draft: SetDraft?) {
     val setNumber: Int get() = position + 1
 
     /** "16 kg × 10" (notification), or the time target ("30–40 min"). */
-    val target: String get() = draft?.let { "${PtBr.number(it.weightKg)} kg × ${it.reps}" } ?: item.target
+    val target: String get() = draft?.let {
+        if (item.exercise.bodyweight) "${it.reps} reps" else "${PtBr.number(it.weightKg)} kg × ${it.reps}"
+    } ?: item.target
 
-    /** "16 × 10" (the app's rest screens). */
-    val short: String get() = draft?.let { "${PtBr.number(it.weightKg)} × ${it.reps}" } ?: item.target
+    /** "16 × 10" (the app's rest screens); "12 reps" with no load. */
+    val short: String get() = draft?.let {
+        if (item.exercise.bodyweight) "${it.reps} reps" else "${PtBr.number(it.weightKg)} × ${it.reps}"
+    } ?: item.target
 }
 
 /**

@@ -226,9 +226,11 @@ class TreinoRepository(
     ): SetEntry = db.withTransaction {
         val session = ensureSession(date)
         val position = entries.getSets(session.id, exerciseId).size
+        // Bodyweight has no load: whatever an older entry prefilled, it is stored as 0.
+        val bodyweight = exercises.get(exerciseId)?.equipment == Equipment.BODYWEIGHT
         SetEntry(
             id = Ids.random(), sessionId = session.id, exerciseId = exerciseId, position = position,
-            weightKg = weightKg, reps = reps, loggedAt = loggedAt,
+            weightKg = if (bodyweight) 0.0 else weightKg, reps = reps, loggedAt = loggedAt,
         ).also { entries.upsertSet(it.toEntity()) }
     }
 

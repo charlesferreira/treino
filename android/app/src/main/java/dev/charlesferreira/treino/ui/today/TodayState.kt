@@ -2,6 +2,7 @@ package dev.charlesferreira.treino.ui.today
 
 import dev.charlesferreira.treino.data.DaySummary
 import dev.charlesferreira.treino.data.ExerciseDay
+import dev.charlesferreira.treino.domain.Equipment
 import dev.charlesferreira.treino.domain.Exercise
 import dev.charlesferreira.treino.domain.ExerciseKind
 import dev.charlesferreira.treino.domain.NextSet
@@ -235,7 +236,21 @@ const val MINUTES_STEP = 5.0
 /* ----------------------------------------------------------------- Labels */
 
 /** The load unit over the table: "kg/halter" when the load is per dumbbell. */
-fun unitLabel(exercise: Exercise): String = if (exercise.countsTwoDumbbells) "kg/halter" else "kg"
+fun unitLabel(exercise: Exercise): String = when {
+    !exercise.countsTwoDumbbells -> "kg"
+    exercise.equipment == Equipment.DUMBBELL -> "kg/halter"
+    else -> "kg/lado"
+}
+
+/** Only reps: the body is the load. */
+val Exercise.bodyweight: Boolean get() = equipment == Equipment.BODYWEIGHT
+
+/** "Halteres 2×" for a pair of dumbbells, "Unilateral" for one side at a time; null otherwise. */
+fun twoSidesTag(exercise: Exercise): String? = when {
+    !exercise.countsTwoDumbbells -> null
+    exercise.equipment == Equipment.DUMBBELL -> "Halteres 2×"
+    else -> "Unilateral"
+}
 
 /** The stepper's visible step: "2", "2,5", or "1 placa" on a machine. */
 fun stepLabel(exercise: Exercise): String {
@@ -263,7 +278,8 @@ fun stepDescription(exercise: Exercise): String {
 }
 
 /** "14 × 12". */
-fun setText(set: SetEntry): String = "${PtBr.number(set.weightKg)} × ${set.reps}"
+fun setText(set: SetEntry): String =
+    if (set.weightKg == 0.0) "${set.reps} reps" else "${PtBr.number(set.weightKg)} × ${set.reps}"
 
 /** "35 min 5,2 km esteira". */
 fun timeText(time: TimeEntry): String = listOfNotNull(
@@ -287,6 +303,7 @@ fun clockLabel(elapsedMs: Long): String {
 
 /** "18 kg" or "35 min": the right side of a row in the start list (last session) or the done card (today). */
 fun loggedSummary(sets: List<SetEntry>, times: List<TimeEntry>): String? = when {
+    sets.isNotEmpty() && sets.all { it.weightKg == 0.0 } -> "${sets.maxOf { it.reps }} reps"
     sets.isNotEmpty() -> PtBr.kg(sets.maxOf { it.weightKg })
     times.isNotEmpty() -> "${PtBr.number(times.sumOf { it.minutes })} min"
     else -> null

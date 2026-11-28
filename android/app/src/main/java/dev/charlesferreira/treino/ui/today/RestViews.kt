@@ -1,5 +1,9 @@
 package dev.charlesferreira.treino.ui.today
 
+import kotlin.math.roundToInt
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
@@ -197,6 +201,8 @@ private fun AnimatedVisibilityScope.RestSheet(rest: RestState, actions: RestActi
     val status = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val nav = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     val shape = RoundedCornerShape(32.dp)
+    // Pulling the grab down minimizes, like the chevron.
+    val drag = rememberSheetDrag(actions::onMinimize)
     Box(Modifier.fillMaxSize()) {
         // The design fades the screen to 30%: the background at 70% over it, tab bar included.
         Box(
@@ -216,6 +222,8 @@ private fun AnimatedVisibilityScope.RestSheet(rest: RestState, actions: RestActi
                 )
                 // `top: 150px` with the design's 54 px status bar.
                 .padding(start = 8.dp, end = 8.dp, bottom = 8.dp, top = status + 96.dp)
+                .offset { IntOffset(0, drag.offset.value.roundToInt()) }
+                .draggable(drag.state, Orientation.Vertical, onDragStopped = { v -> drag.release(v) })
                 .dropShadow(shape, Shadow(radius = 50.dp, color = Color.Black.copy(alpha = 0.6f), offset = DpOffset(0.dp, (-10).dp)))
                 .clip(shape)
                 .background(TreinoColors.Card, shape)
@@ -317,17 +325,21 @@ private fun NextPanel(rest: RestState, onUndo: () -> Unit, next: (@Composable ()
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(TreinoColors.Border))
         }
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.size(20.dp).border(2.dp, TreinoColors.Accent, CircleShape))
-            TText(
-                "Próxima, série ${rest.setNumber}",
-                Modifier.weight(1f),
-                style = TreinoType.Body.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.W600),
-                maxLines = 1,
-            )
-            if (next == null) TText(rest.nextShort, style = TreinoType.mono(14.sp), maxLines = 1)
+        // The next set's load and reps when they can be tuned here; otherwise just what comes next.
+        if (next != null) {
+            next()
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.size(20.dp).border(2.dp, TreinoColors.Accent, CircleShape))
+                TText(
+                    "Série ${rest.setNumber}",
+                    Modifier.weight(1f),
+                    style = TreinoType.Body.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.W600),
+                    maxLines = 1,
+                )
+                TText(rest.nextShort, style = TreinoType.mono(14.sp), maxLines = 1)
+            }
         }
-        next?.invoke()
     }
 }
 
