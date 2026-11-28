@@ -72,6 +72,8 @@ fun TimeExerciseCard(item: ItemUi, draft: TimeDraft, actions: WorkoutActions) {
                 TText(timeText(time), style = TreinoType.mono(14.sp), maxLines = 1)
             }
         }
+        // Done: the entries can be read and edited, nothing more is logged.
+        if (item.complete) return@ExerciseBody
         Field("Minutos") {
             Stepper(
                 value = PtBr.number(draft.minutes),

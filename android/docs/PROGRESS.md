@@ -239,6 +239,9 @@ https://claude.ai/artifact/DkTuANNtUVA92i4SdUg1Ff, página "Telas por aba" (`des
     gravada com 0 kg mesmo que o histórico importado traga carga, e o texto vira "12 reps".
   - Cabeçalho do treino com vidro fosco: o que rola por baixo aparece desfocado (Haze 2.1,
     `haze-blur`), com um véu escuro por cima.
+  - Exercício terminado, aberto de novo, é só consulta e edição: as séries feitas (um toque edita)
+    sem linha da próxima série, steppers nem "Registrar série". Decisão do Charles (28 nov), que
+    também manteve o toque no nome abrindo a folha do exercício.
   - Testes: `GymFeedbackTest`. Conferido no AVD: animação de início, arraste da folha de descanso,
     círculo parcial, vidro fosco, folha do exercício com equipamento, peso corporal e a barra da
     notificação esvaziando.

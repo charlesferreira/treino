@@ -162,8 +162,8 @@ Primeiro treino com o modo treino. Itens 2 a 11 abaixo continuam sem teste forma
 | Espaço antes do relógio | Na cortina, "Descanso  00:42" saiu com espaço (o U+2003 de 26 nov funcionou). |
 | Começar treino | Começava seco. Entrou a animação de início (laranja cobrindo a tela com o nome do treino). |
 | Cronômetro do treino e pílula do descanso | Bons, sem mudança. |
-| Nome do exercício | A folha tinha alça que não arrastava, e com uma sessão só repetia o que já está na tela. Com várias sessões ficou interessante. Agora: arrasta para fechar, mostra todas as sessões e tem o equipamento. Ele esperava que o toque fechasse o exercício no acordeão; fica em aberto. |
-| Exercício terminado aberto de novo | Mostra "Registrar série 4" (série a mais). Não esperado; fica em aberto para decidir. |
+| Nome do exercício | A folha tinha alça que não arrastava, e com uma sessão só repetia o que já está na tela. Com várias sessões ficou interessante. Agora: arrasta para fechar, mostra todas as sessões e tem o equipamento. Ele esperava que o toque fechasse o exercício no acordeão; decidiu manter a folha. |
+| Exercício terminado aberto de novo | Mostrava "Registrar série 4" (série a mais). Decidido: terminado é só consulta e edição. |
 | Linha recolhida pela metade | "2/3" pouco claro; virou círculo que enche como relógio. |
 | Folha de descanso | "Próxima, série 1" não dizia nada e a alça não minimizava. Saiu a linha; a alça arrasta para minimizar. |
 | Elevação lateral no cabo | Unilateral, precisa contar 2 como os halteres. Interruptor "Unilateral" no equipamento do cabo. |

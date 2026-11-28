@@ -441,7 +441,8 @@ fun ExerciseTitle(item: ItemUi, onName: (() -> Unit)? = null, tags: @Composable 
 private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String?, actions: WorkoutActions) {
     val exercise = item.exercise
     val next = item.nextPosition()
-    val rows = maxOf(item.total, item.sets.size + 1)
+    // Done: only the sets logged, to read and edit; no set beyond the target is offered.
+    val rows = if (item.complete) item.sets.size else maxOf(item.total, item.sets.size + 1)
     var focused by remember(item.item.id, next) { mutableStateOf(CellFocus.NONE) }
     ExerciseBody {
         ExerciseTitle(item, onName = { actions.onHistory(item) }) {
@@ -519,6 +520,7 @@ private fun CurrentExerciseCard(item: ItemUi, draft: SetDraft, sessionId: String
                 }
             }
         }
+        if (item.complete) return@ExerciseBody
         NextSetSteppers(item, draft, onStepWeight = { actions.onStepWeight(item, it) }, onStepReps = { actions.onStepReps(item, it) })
         val view = LocalView.current
         PrimaryButton(
